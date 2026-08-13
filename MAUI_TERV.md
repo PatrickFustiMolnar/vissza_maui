@@ -640,8 +640,31 @@ A régi `Desktop/vissza` projekt innentől **csak olvasásra** szolgál referenc
 - **A képfeltöltés magic byte ellenőrzést is kapott.** A régi csak a
   kiterjesztést és a MIME típust nézte, amit a kliens ad — mindkettő
   hamisítható, és a feltöltött fájlokat statikusan kiszolgáljuk.
-- **Az író utak továbbra sem tesztelve** élesben, mert a közös demo
-  adatbázisba írnának. Ez a fázis nyitott pontja.
+- **Az író utak is végigtesztelve** élesben, a teljes állapotgépen
+  (felajánlás → jelentkezés → elfogadás → kétoldalú megerősítés → lezárás →
+  értékelés), majd minden tesztadat törölve és a felhasználói statisztikák
+  visszaállítva a kiindulási értékre. Részletek alább.
+
+#### A végigfuttatott folyamat
+
+| Lépés | Ellenőrzött viselkedés |
+|---|---|
+| Felajánlás létrehozása | `active`, gyűjtő nélkül |
+| Jelentkezés | `pending` |
+| A gyűjtő elfogadná magát | **403** — csak a felajánló dönthet |
+| A felajánló elfogad | kérés `accepted`, felajánlás `reserved`, `selected_collector_id` beállítva, **átvétel automatikusan létrejött** a felajánlás adataival |
+| Részleges felajánlás-frissítés | `selected_collector_id` **megmaradt** — a régi backend itt nullázta (5.2/1) |
+| Lezárás megerősítések nélkül | **400** |
+| A gyűjtő a felajánló nevében erősítene meg | figyelmen kívül hagyva |
+| Mindkét fél megerősít, majd lezárás | átvétel és felajánlás `completed`, statisztika **+1 mindkét félnek** |
+| Ugyanaz a lezárás megismételve | 200, de a statisztika **nem nőtt újra** |
+| Lezárt átvétel újranyitása | **409** |
+| Értékelés | átlag újraszámolva (4,67 → 4,75), `rater_email` nincs a válaszban |
+| Ugyanaz az értékelés újra | **400** |
+
+A takarítás után a felajánlás, a kérés, az átvétel és az értékelés is eltűnt
+(a felajánlás törlése kaszkádban vitte a kérést és az átvételt), a két
+felhasználó statisztikája pedig betűre a mentett kiindulási értéken áll.
 
 ### 2026-08-13 — offers végpontcsoport
 
