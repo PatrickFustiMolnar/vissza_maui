@@ -356,6 +356,16 @@ Ezek a **3. fázisba** tartoznak, a `CollectPage` megírásakor. A `sortBy`
 "quantity" és "newest" ága szerveroldalon is menne, de a háromból kettőt
 kliensen, egyet szerveren rendezni rosszabb, mint mindhármat egy helyen.
 
+**3. Az értékelő e-mail címe kiszivárgott.** *(javítva)*
+
+A `GET /ratings` szándékosan kihagyja az értékelő e-mail címét, a kódban
+kommenttel: "az értékelő e-mail címe nem tartozik a hívóra". A `GET
+/ratings/:id` és a `POST /ratings` viszont továbbra is kiadta, tehát bármely
+bejelentkezett felhasználó lekérdezhette bárki e-mail címét egy értékelésen
+keresztül. A kliens sehol nem használja a mezőt.
+
+Az új API-ban mindhárom végpont egyformán viselkedik, e-mail nélkül.
+
 ### 5.3 Képfeltöltés
 
 A `multer` helyett `IFormFile` + `app.UseStaticFiles()`. A képek maradnak helyi
@@ -611,6 +621,27 @@ A régi `Desktop/vissza` projekt innentől **csak olvasásra** szolgál referenc
 ---
 
 ## 11. Módosítási napló
+
+### 2026-08-13 — az 1. fázis API része kész (31/31)
+
+- **Mind a 31 végpont megvan**, kilenc csoportban. Élesben füstölve, nulla
+  hibával a naplóban.
+- **Konkurenciakezelés átemelve.** A `collection-requests` és a `transactions`
+  ág `SELECT ... FOR UPDATE` sorzárakat használ, azonos zárolási sorrenddel
+  (előbb felajánlás, utána kérés/átvétel) — fordított sorrendben InnoDB-
+  holtpont lenne. Az EF Core-ban nincs beépített pesszimista zárolás, ezért a
+  `Data/RowLocking.cs` nyers SQL-lel csinálja; a táblanév mindig konstans.
+- **A kétoldalú megerősítés megmaradt:** átvétel csak akkor zárul le, ha
+  mindkét fél megerősítette, és a lezárt átvétel végállapot.
+- **Nincs N+1 sehol.** A beszélgetéslista 3 lekérdezés a beszélgetések
+  számától függetlenül, a listák egyetlen JOIN-olt lekérdezés.
+- **Harmadik hiba javítva** (5.2/3): az értékelő e-mail címe kiszivárgott a
+  `GET /ratings/:id` és a `POST /ratings` válaszában.
+- **A képfeltöltés magic byte ellenőrzést is kapott.** A régi csak a
+  kiterjesztést és a MIME típust nézte, amit a kliens ad — mindkettő
+  hamisítható, és a feltöltött fájlokat statikusan kiszolgáljuk.
+- **Az író utak továbbra sem tesztelve** élesben, mert a közös demo
+  adatbázisba írnának. Ez a fázis nyitott pontja.
 
 ### 2026-08-13 — offers végpontcsoport
 

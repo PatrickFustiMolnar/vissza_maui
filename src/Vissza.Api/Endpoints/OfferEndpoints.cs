@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vissza.Api.Data;
@@ -8,7 +7,6 @@ using Vissza.Api.Mapping;
 using Vissza.Api.Services;
 using Vissza.Shared.Dtos;
 using Vissza.Shared.Enums;
-using Vissza.Shared.Json;
 
 namespace Vissza.Api.Endpoints;
 
@@ -41,7 +39,7 @@ public static class OfferEndpoints
 
         if (!string.IsNullOrEmpty(status))
         {
-            if (!TryParseEnum<OfferStatus>(status, out var parsed, out var error))
+            if (!EnumQuery.TryParse<OfferStatus>(status, out var parsed, out var error))
                 return Results.BadRequest(error);
 
             query = query.Where(o => o.Status == parsed);
@@ -52,7 +50,7 @@ public static class OfferEndpoints
 
         if (!string.IsNullOrEmpty(bottleType))
         {
-            if (!TryParseEnum<BottleType>(bottleType, out var parsed, out var error))
+            if (!EnumQuery.TryParse<BottleType>(bottleType, out var parsed, out var error))
                 return Results.BadRequest(error);
 
             query = query.Where(o => o.BottleType == parsed);
@@ -206,29 +204,6 @@ public static class OfferEndpoints
         await db.SaveChangesAsync(ct);
 
         return Results.Ok(new MessageResponse("Offer deleted successfully"));
-    }
-
-    /// <summary>
-    /// Enum query paraméter feldolgozása. Kis-nagybetű független, mert a
-    /// query paraméterek kötése nem megy át a JSON konverteren - a hibaüzenet
-    /// viszont ugyanaz, mint amit a törzsben lévő rossz érték adna.
-    /// </summary>
-    static bool TryParseEnum<TEnum>(string text, out TEnum value, out MessageResponse error)
-        where TEnum : struct, Enum
-    {
-        if (Enum.TryParse(text, ignoreCase: true, out value) && Enum.IsDefined(value))
-        {
-            error = null!;
-            return true;
-        }
-
-        var wireName = typeof(TEnum).GetCustomAttribute<WireNameAttribute>()?.Name
-            ?? typeof(TEnum).Name.ToLowerInvariant();
-
-        var allowed = string.Join(", ", Enum.GetNames<TEnum>().Select(n => n.ToLowerInvariant()));
-
-        error = new MessageResponse($"Invalid {wireName}. Must be one of: {allowed}");
-        return false;
     }
 
     /// <summary>

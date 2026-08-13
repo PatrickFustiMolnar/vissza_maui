@@ -140,5 +140,12 @@ app.MapGet("/api/health", () => Results.Ok(new { status = "ok", message = "Serve
 
 app.MapAuthEndpoints();
 app.MapOfferEndpoints();
+app.MapCollectionRequestEndpoints();
+app.MapTransactionEndpoints();
+app.MapRatingEndpoints();
+app.MapMessageEndpoints();
+app.MapUserEndpoints();
+app.MapReturnLocationEndpoints();
+app.MapUploadEndpoints();
 
 app.Run();
