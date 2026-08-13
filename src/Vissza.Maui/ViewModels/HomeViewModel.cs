@@ -54,7 +54,7 @@ public sealed partial class HomeViewModel(IVisszaApi api, AuthService auth) : Vi
             return;
 
         // A részletek képernyő a 3. fázisban készül.
-        await Shell.Current.DisplayAlert(
+        await Shell.Current.DisplayAlertAsync(
             offer.Address,
             $"{offer.Quantity} db · {offer.Status}\nFelajánló: {offer.DonorName}",
             "Bezár");

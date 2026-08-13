@@ -566,13 +566,17 @@ GPU-alapú (`SKGLView`) megjelenítő a CPU-alapú helyett, a Mapsui hivatalos
 MAUI mintaprojektjének összevetése, és a Mapsui hibajegyeinek átnézése erre
 a tünetre.
 
+**A 0. fázis ezzel lezárult, a `spike/` mappa törölve** (2026-08-13). A
+kísérlet a kérdés megválaszolására készült, nem alapnak: a tanulságai ebben
+a fejezetben vannak, a kód nem marad a valós projekt mellett.
+
 ---
 
 ## 8. Ütemezés
 
 | Fázis | Tartalom | Becslés |
 |---|---|---|
-| **0. Térkép spike** | Eldobható app, a 7.5 hat pontja iOS-en és Androidon | 3-4 nap |
+| ~~0. Térkép spike~~ | **kész** — Mapsui igazolva, a spike törölve | |
 | **1. Api + Shared** | Scaffold, 31 végpont, JWT, BCrypt, tranzakciók, rate limit | 1-1,5 hét |
 | **2. Maui váz** | Shell navigáció, Refit kliens, `AuthService`, téma, `OfferCardView` | 3-4 nap |
 | **3. Képernyők** | 11 oldal + ViewModelek | 2-3 hét |
@@ -623,7 +627,11 @@ Az 1. fázis megkezdéséhez el kell dőlnie, hol fut majd az API — lásd alá
 
     Elvetett alternatíva: Xcode frissítés 26.6-ra. A gépen 15 GB szabad hely
     van, ami egy Xcode-frissítéshez szoros.
-  - **Android:** nincs Android SDK a gépen. JDK 21 és 17 van, az megfelel.
+  - **Android:** ~~nincs Android SDK a gépen~~ — **döntés 2026-08-13: az
+    Android elhalasztva.** A gépen a workload telepítése után 5,9 GB szabad
+    hely maradt, az Android SDK az emulátor rendszerképpel 5-8 GB. A
+    `Vissza.Maui` csak `net10.0-ios`-re fordít; a MAUI kód platformfüggetlen,
+    ezért az Android cél bármikor visszavehető átírás nélkül.
 - **Csempeforrás éles üzemben** — lásd a 7.3 pontot; a fejlesztés OSM nyilvános
   csempékkel indul, az éles döntés később.
 - **Párhuzamos üzem** — a régi RN app és az új MAUI app egy ideig ugyanazt az
@@ -653,6 +661,15 @@ A régi `Desktop/vissza` projekt innentől **csak olvasásra** szolgál referenc
 ---
 
 ## 11. Módosítási napló
+
+### 2026-08-13 — takarítás és iOS-fókusz
+
+- **A `spike/` mappa véglegesen törölve** (347 MB). A 0. fázis lezárva; a
+  Mapsui-tanulságok a 7. fejezetben maradnak.
+- **Csak iOS.** A `Vissza.Maui` `TargetFrameworks` értéke `net10.0-ios`.
+  Ezzel a solution-szintű `dotnet build` újra hibátlan, és nem kell külön
+  paraméterrel fordítani.
+- Az Android a lemezhely miatt vár; a döntés a 9. fejezetben.
 
 ### 2026-08-13 — 2. fázis: a MAUI váz megvan, de indításkor összeomlik
 

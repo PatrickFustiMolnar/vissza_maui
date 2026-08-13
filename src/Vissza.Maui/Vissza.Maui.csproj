@@ -1,9 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net10.0-android</TargetFrameworks>
-		<TargetFrameworks Condition="!$([MSBuild]::IsOSPlatform('linux'))">$(TargetFrameworks);net10.0-ios</TargetFrameworks>
-		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
+		<!-- Egyelőre csak iOS. Az Android SDK nincs telepítve, és a gépen
+		     nincs is rá elég szabad hely; az Android célt akkor vesszük fel,
+		     amikor ténylegesen tesztelni akarunk rá. A MAUI kód
+		     platformfüggetlen, tehát ez nem jár átírással.
+		     Visszavételhez: ;net10.0-android a listához. -->
+		<TargetFrameworks>net10.0-ios</TargetFrameworks>
 
 		<!-- Note for MacCatalyst:
 		The default runtime is maccatalyst-x64, except in Release config, in which case the default is maccatalyst-x64;maccatalyst-arm64.

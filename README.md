@@ -6,7 +6,7 @@ együtt, a [MAUI_TERV.md](MAUI_TERV.md) tartalmazza.
 ```
 src/Vissza.Api      ASP.NET Core Minimal API + EF Core
 src/Vissza.Shared   DTO-k és enumok, a szerver és a kliens közösen használja
-spike/              a 0. fázis eldobható térkép-kísérlete, a fázis végén törlendő
+src/Vissza.Maui     MAUI alkalmazás (egyelőre csak iOS)
 ```
 
 ## Első lépés: a workload set telepítése
