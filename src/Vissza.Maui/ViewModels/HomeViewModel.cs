@@ -13,8 +13,10 @@ namespace Vissza.Maui.ViewModels;
 /// készül. Az a dolga, hogy a teljes láncot bizonyítsa: Refit hívás, Bearer
 /// token, snake_case DTO leképezés és az OfferCardView megjelenítése.
 /// </summary>
-public sealed partial class HomeViewModel(IVisszaApi api, AuthService auth) : ViewModelBase
+public sealed partial class HomeViewModel(IServiceProvider services, AuthService auth) : ViewModelBase
 {
+    IVisszaApi Api => services.GetRequiredService<IVisszaApi>();
+
     public ObservableCollection<OfferDto> Offers { get; } = [];
 
     [ObservableProperty]
@@ -29,7 +31,7 @@ public sealed partial class HomeViewModel(IVisszaApi api, AuthService auth) : Vi
 
         await RunAsync(async () =>
         {
-            var offers = await api.GetOffersAsync(status: "active");
+            var offers = await Api.GetOffersAsync(status: "active");
 
             Offers.Clear();
 

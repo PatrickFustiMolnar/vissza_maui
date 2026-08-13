@@ -662,6 +662,50 @@ A régi `Desktop/vissza` projekt innentől **csak olvasásra** szolgál referenc
 
 ## 11. Módosítási napló
 
+### 2026-08-13 — az indítási összeomlás megoldva
+
+Az app elindul. A hiba **két, egymástól független ok** volt, mindkettő
+mérve, nem tippelve.
+
+**1. A Refit forráskód-generátora nem futott le.**
+
+A `Refit.HttpClientFactory` függ a `Refit`-től, de a **forráskód-generátorok
+nem öröklődnek tranzitív csomagfüggőségen keresztül** - csak közvetlen
+`PackageReference` aktiválja őket. Generátor nélkül a Refit futásidőben,
+IL-kibocsátással állítja elő az interfész implementációját, amit az iOS
+tilt.
+
+Ellenőrizhető: `EmitCompilerGeneratedFiles` bekapcsolásával 31 generált fájl
+volt, mind a MAUI XAML generátorától, a Refittől egy sem. A közvetlen
+`Refit` hivatkozás után megjelent az `IVisszaApi.g.cs`.
+
+**2. A HTTP-verem felépülése az UI létrehozásakor.**
+
+Az igazi kiváltó ok. Ha az oldal konstruktorában feloldódik az `IVisszaApi`
+(a nézetmodellen és az `AuthService`-en keresztül), az app natívan
+összeomlik: `SIGSEGV` a `UIWindowScene` trait-felépítésében, **egyetlen
+menedzselt keret nélkül** a veremben.
+
+A mérés egyértelmű volt:
+
+| Az oldal konstruktora | Eredmény |
+|---|---|
+| nem old fel semmit | fut |
+| `new LoginViewModel(null!)` — minden kötés él, Refit nem | fut |
+| `ServiceHelper.Get<IVisszaApi>()` | **összeomlik** |
+
+**Megoldás:** az `AuthService` és a `HomeViewModel` `IServiceProvider`-t kap,
+és az API klienst tulajdonságon keresztül, az első tényleges híváskor oldja
+fel. Ez amúgy is helyesebb: az UI felépítése nem építhet HTTP-vermet.
+
+**Ellenőrizve:** az app elindul, a bejelentkezési képernyő **sötét módban, a
+portolt palettával** renderel, és a nézetmodell kötései élnek (a validációs
+hibaüzenet a helyes hibaszínnel jelenik meg).
+
+**Nincs még ellenőrizve:** a tényleges bejelentkezés a felületen. A
+szimulátor szövegbevitele friss indítás után akadozik - ez a teszthámor
+korlátja, nem az appé; az API oldala a 31 végponttal külön bizonyított.
+
 ### 2026-08-13 — takarítás és iOS-fókusz
 
 - **A `spike/` mappa véglegesen törölve** (347 MB). A 0. fázis lezárva; a

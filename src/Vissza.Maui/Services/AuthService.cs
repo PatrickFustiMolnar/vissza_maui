@@ -9,8 +9,13 @@ namespace Vissza.Maui.Services;
 /// a kulcstartóba, Androidon a Keystore-ral titkosítva. A régi app AsyncStorage-t
 /// használt, ami sima szövegként tárolta.
 /// </summary>
-public sealed class AuthService(IVisszaApi api)
+public sealed class AuthService(IServiceProvider services)
 {
+    // Az API kliens lusta: a Refit/HttpClient verem felépítése az UI
+    // létrehozásának pillanatában natív összeomlást okoz iOS-en, ezért
+    // csak az első tényleges hívásnál épül fel.
+    IVisszaApi Api => services.GetRequiredService<IVisszaApi>();
+
     const string TokenKey = "vissza.auth.token";
 
     string? _token;
@@ -38,7 +43,7 @@ public sealed class AuthService(IVisszaApi api)
             if (string.IsNullOrEmpty(_token))
                 return false;
 
-            CurrentUser = await api.GetMeAsync();
+            CurrentUser = await Api.GetMeAsync();
             AuthStateChanged?.Invoke(this, EventArgs.Empty);
 
             return true;
@@ -56,14 +61,14 @@ public sealed class AuthService(IVisszaApi api)
 
     public async Task SignInAsync(string email, string password)
     {
-        var response = await api.LoginAsync(new LoginRequest { Email = email, Password = password });
+        var response = await Api.LoginAsync(new LoginRequest { Email = email, Password = password });
 
         await StoreAsync(response);
     }
 
     public async Task RegisterAsync(RegisterRequest request)
     {
-        var response = await api.RegisterAsync(request);
+        var response = await Api.RegisterAsync(request);
 
         await StoreAsync(response);
     }
