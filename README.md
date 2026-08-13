@@ -9,6 +9,19 @@ src/Vissza.Shared   DTO-k és enumok, a szerver és a kliens közösen használj
 spike/              a 0. fázis eldobható térkép-kísérlete, a fázis végén törlendő
 ```
 
+## Első lépés: a workload set telepítése
+
+A repo `global.json`-ja a `10.0.300.1` workload sethez van rögzítve, mert az
+hozza azt a .NET iOS SDK-t, ami a gépen lévő Xcode 26.4-gyel párban van.
+Amíg ez nincs telepítve, **minden build elhasal** `MSB4242` hibával — az
+`src/Vissza.Api` is, nem csak a MAUI rész.
+
+```bash
+cd /Users/fustimolnarpatrick/vissza_maui && sudo dotnet workload restore
+```
+
+Rendszerszintű jogot kér, mert a .NET a `/usr/local/share/dotnet` alatt van.
+
 ## Az API futtatása
 
 Az adatbázis-jelszó és a JWT titok **nincs a repóban**, és nem is kerül bele.

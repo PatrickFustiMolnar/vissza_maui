@@ -586,11 +586,16 @@ Az 1. fázis megkezdéséhez el kell dőlnie, hol fut majd az API — lásd alá
     sudo dotnet workload restore
     ```
 
-    **Figyelem:** a `global.json`-t csak akkor tedd be, ha a workload set
-    telepítése is megtörtént. Egy nem telepített verzióra mutató pin
-    **minden buildet elront a repóban** — a sima konzol projektet is —,
-    `MSB4242` hibával. Ezért most nincs `global.json` a repóban.
-    Alternatíva: Xcode frissítés 26.6-ra, akkor semmilyen pin nem kell.
+    **Döntés (2026-08-13):** ez az út. A `global.json` a repóban van.
+
+    **Figyelem:** amíg a workload set nincs telepítve, a pin **minden buildet
+    elront a repóban** — a sima konzol projektet is —, `MSB4242` hibával.
+    Ez nem regresszió, hanem a telepítés hiánya. A `global.json`-nak a
+    `restore` előtt kell a helyén lennie, mert abból derül ki, melyik
+    verziót kell telepíteni.
+
+    Elvetett alternatíva: Xcode frissítés 26.6-ra. A gépen 15 GB szabad hely
+    van, ami egy Xcode-frissítéshez szoros.
   - **Android:** nincs Android SDK a gépen. JDK 21 és 17 van, az megfelel.
 - **Csempeforrás éles üzemben** — lásd a 7.3 pontot; a fejlesztés OSM nyilvános
   csempékkel indul, az éles döntés később.
