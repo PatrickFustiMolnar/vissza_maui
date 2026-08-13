@@ -166,8 +166,14 @@ csak POCO DTO-kat és enumokat.
 | Api | beépített `AddRateLimiter` | az `express-rate-limit` helyett |
 | Maui | `CommunityToolkit.Mvvm` | `ObservableObject`, `RelayCommand` |
 | Maui | `Refit.HttpClientFactory` | tipizált API kliens |
-| Maui | `Mapsui.UI.Maui` | térkép, OSM csempékkel, API kulcs nélkül |
-| Maui | `Mapsui.Nts` | sugárkör poligonná alakítása |
+| Maui | `Mapsui.Maui` 5.1.0 | térkép, OSM csempékkel, API kulcs nélkül |
+| Maui | `Mapsui.Tiling` 5.1.0 | OSM csempeforrás |
+| Maui | `Mapsui.Nts` 5.1.0 | sugárkör poligonná alakítása |
+
+A csomag neve **`Mapsui.Maui`**, nem `Mapsui.UI.Maui` — utóbbi a 4.x-es név volt.
+A benne lévő assembly viszont `Mapsui.UI.Maui`, tehát a XAML névtér:
+`xmlns:mapsui="clr-namespace:Mapsui.UI.Maui;assembly=Mapsui.UI.Maui"`.
+A `MauiProgram`-ban kell egy `.UseSkiaSharp()` hívás is, e nélkül a térkép üres.
 
 A `Microsoft.Maui.Controls.Maps` **nem** kerül be — lásd az 1.5 és a 7. pontot.
 A `Platforms/` mappa marad, de csak a MAUI alap sablonfájlokat tartalmazza;
@@ -401,7 +407,21 @@ var p = SphericalMercator.FromLonLat(offer.LocationLng, offer.LocationLat);
 
 Figyelem a paraméterek sorrendjére: **először hosszúság, utána szélesség.**
 Felcserélve nem hibázik, csak rossz helyre teszi a markert — ez a leggyakoribb
-Mapsui-hiba.
+Mapsui-hiba. A spike mérése szerint Budapest koordinátáit felcserélve a marker
+**4083 km-rel** odébb kerül, kivétel nélkül.
+
+**A sugárkörnél korrigálni kell a Mercator-torzítást.** A `Buffer()` a vetített
+koordinátarendszerben dolgozik, ahol egy egység nem egy méter. Korrekció nélkül
+az 5 km-es kör Budapesten 3378 m-esnek jönne ki:
+
+```csharp
+var mercatorRadius = meters / Math.Cos(lat * Math.PI / 180.0);
+```
+
+**A Navigator csak méretezett viewporton működik.** Ha a `CenterOnAndZoomTo`
+hívás a konstruktorban fut, **némán nem csinál semmit** — nincs kivétel, a
+térkép a 0,0 ponton marad. A helyes horog a `Map.ViewportInitialized` esemény.
+(A Mapsui 4-es `Map.Home` tulajdonság az 5-ösben már nem létezik.)
 
 ### 7.3 A csempeforrás kérdése
 
@@ -470,16 +490,12 @@ Az 1. fázis megkezdéséhez el kell dőlnie, hol fut majd az API — lásd alá
 
 ## 9. Nyitott kérdések
 
-- **Hol fut az API?** *(a legfontosabb, az 1. fázist blokkolja)* A jelenlegi
-  Hostinger shared hosting csomag hosszan futó .NET processzt nem tud
-  kiszolgálni. Lehetőségek:
-  1. **Hostinger VPS** — egy szolgáltatónál marad minden, Docker, nginx reverse
-     proxy 443 → 5000, Let's Encrypt. A DB maradhat, ahol van, csak a VPS
-     IP-jét kell engedélyezni a Remote MySQL beállításban.
-  2. **PaaS** (Railway, Fly.io, Azure App Service) — a HTTPS és a deploy
-     automatikus, de új szolgáltató, és az ingyenes szintek elalszanak.
-  3. **Egyelőre marad fejlesztői mód** — ha a projekt demó/vizsga célú, a
-     lokális API elég, és a döntést az éles indulásra halasztjuk.
+- **Mobil build toolchain** *(a 0. fázis vizuális részét blokkolja)*
+  - **iOS:** a telepített .NET iOS SDK (26.5.10301) **Xcode 26.6-ot vár**, a
+    gépen Xcode 26.4 van. Vagy Xcode-frissítés (nagy letöltés, a szabad 15 GB
+    kevés lehet), vagy egy régebbi workload set a projektre pinelve
+    (`global.json` → `sdk.workloadVersion`).
+  - **Android:** nincs Android SDK a gépen. JDK 21 és 17 van, az megfelel.
 - **Csempeforrás éles üzemben** — lásd a 7.3 pontot; a fejlesztés OSM nyilvános
   csempékkel indul, az éles döntés később.
 - **Párhuzamos üzem** — a régi RN app és az új MAUI app egy ideig ugyanazt az
@@ -492,6 +508,9 @@ Az 1. fázis megkezdéséhez el kell dőlnie, hol fut majd az API — lásd alá
 
 - ~~Google Maps API kulcs~~ — tárgytalan, a Mapsui nem használ Google-t (1.5)
 - ~~HTTPS és domain~~ — megvan, a Hostinger automatikusan kezeli (1.6)
+- ~~Hol fut az API~~ — **döntés 2026-08-13: egyelőre marad fejlesztői mód.**
+  A lokális API elég, a hosting kérdését az éles indulás előtt vesszük elő.
+  Az akkori lehetőségek: Hostinger VPS, vagy PaaS (Railway, Fly.io, Azure).
 
 ---
 
@@ -507,7 +526,24 @@ A régi `Desktop/vissza` projekt innentől **csak olvasásra** szolgál referenc
 
 ## 11. Módosítási napló
 
-### 2026-08-13
+### 2026-08-13 — a 0. fázis indulása
+
+- **API hosting: fejlesztői mód marad** (döntés). A 9. fejezet kérdése lezárva.
+- **A spike elindult**, `spike/` alatt. Két projekt:
+  - `spike/MapSpike` — a MAUI app, a 7.5 hat kritériumára építve
+  - `spike/MapLogicCheck` — sima konzol projekt, ami a Mapsui-logikát mobil
+    toolchain nélkül ellenőrzi. 15 állítás, mind zöld: vetítés a Mercator
+    képlete szerint pontos, a sugárkör korrekcióval 5000 m (korrekció nélkül
+    3378 m lenne), rétegsorrend és marker-attribútumok rendben.
+  - A spike a repóban marad, amíg a 0. fázis le nem zárul, aztán törlendő.
+- **Három Mapsui-buktató dokumentálva** a 7.2-ben: a `FromLonLat` paraméter-
+  sorrendje, a Mercator-korrekció a sugárkörnél, és hogy a `Navigator` némán
+  nem csinál semmit méretezetlen viewporton.
+- **Csomagnév javítva:** `Mapsui.Maui`, nem `Mapsui.UI.Maui` (3.1).
+- **Toolchain-blokkoló felvéve** a 9. fejezetbe: Xcode 26.4 vs. a kért 26.6,
+  és a hiányzó Android SDK.
+
+### 2026-08-13 — terv
 
 - **Térkép: platform handler → Mapsui + OSM.** Kiderült, hogy a MAUI beépített
   `Map` kontrollja Androidon Google Maps SDK-t használ, ami API kulcsot igényel.
