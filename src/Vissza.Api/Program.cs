@@ -6,9 +6,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Vissza.Api.Data;
 using Vissza.Api.Endpoints;
+using Vissza.Api.Middleware;
 using Vissza.Api.RateLimiting;
 using Vissza.Api.Services;
 using Vissza.Shared.Dtos;
+using Vissza.Shared.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,8 +54,10 @@ builder.Services.AddDbContext<VisszaDbContext>(options => options
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
-    options.SerializerOptions.Converters.Add(
-        new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower));
+
+    // Saját konverter a beépített JsonStringEnumConverter helyett: hibás
+    // értéknél megmondja, mely értékek érvényesek, .NET típusnév nélkül.
+    options.SerializerOptions.Converters.Add(new DomainEnumConverter());
 });
 
 builder.Services
@@ -105,6 +109,9 @@ var app = builder.Build();
 // Pipeline
 // ---------------------------------------------------------------------------
 
+// Legkívül, hogy minden alatta keletkező hibát elkapjon.
+app.UseMessageShapedErrors();
+
 app.UseCors();
 
 // A fiókonkénti limithez ismerni kell az e-mailt, az viszont a kérés
@@ -132,5 +139,6 @@ app.UseStaticFiles(new StaticFileOptions
 app.MapGet("/api/health", () => Results.Ok(new { status = "ok", message = "Server is running" }));
 
 app.MapAuthEndpoints();
+app.MapOfferEndpoints();
 
 app.Run();

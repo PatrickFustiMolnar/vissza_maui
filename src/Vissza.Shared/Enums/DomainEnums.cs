@@ -1,3 +1,5 @@
+using Vissza.Shared.Json;
+
 namespace Vissza.Shared.Enums;
 
 // A hat enum egy fájlban van, mert mindegyik egyetlen sor, és mind ugyanazt a
@@ -9,6 +11,7 @@ namespace Vissza.Shared.Enums;
 // helyen (LowerCaseEnumConverter és a JSON policy).
 
 /// <summary>users.user_role</summary>
+[WireName("user_role")]
 public enum UserRole
 {
     Donor,
@@ -17,6 +20,7 @@ public enum UserRole
 }
 
 /// <summary>offers.bottle_type, transactions.bottle_type</summary>
+[WireName("bottle_type")]
 public enum BottleType
 {
     Pet,
@@ -26,6 +30,7 @@ public enum BottleType
 }
 
 /// <summary>offers.status</summary>
+[WireName("status")]
 public enum OfferStatus
 {
     Active,
@@ -35,6 +40,7 @@ public enum OfferStatus
 }
 
 /// <summary>collection_requests.status</summary>
+[WireName("status")]
 public enum RequestStatus
 {
     Pending,
@@ -44,6 +50,7 @@ public enum RequestStatus
 }
 
 /// <summary>transactions.status</summary>
+[WireName("status")]
 public enum TransactionStatus
 {
     Pending,
@@ -52,6 +59,7 @@ public enum TransactionStatus
 }
 
 /// <summary>return_locations.type</summary>
+[WireName("type")]
 public enum LocationType
 {
     Automata,

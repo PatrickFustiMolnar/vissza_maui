@@ -316,7 +316,35 @@ nem szabad elveszni:
 - **Részleges frissítés** — a `PUT` végpontok ne dobjanak 500-at, ha csak néhány
   mező érkezik.
 
-### 5.2 Képfeltöltés
+### 5.2 Talált hibák a régi backendben
+
+A portolás közben előkerült hibák. Az újban javítva vannak, de a **régi
+backendben még élnek**, amíg az fut.
+
+**1. A befejezés törli a kiválasztott gyűjtőt.** *(javítva)*
+
+A `PUT /offers/:id` minden mezőt `COALESCE(?, oszlop)`-pal kezel, egyet
+kivéve: a `selected_collector_id`-t közvetlenül írja felül. Emiatt a
+`GiveScreen.js:747` `{ status: 'completed' }` kérése mellékesen kinullázza a
+gyűjtőt. Utána az `OfferDetailScreen.js:116` nem talál partnert, és **a
+felajánló nem tud üzenni a gyűjtőnek az átvétel után**.
+
+Az új API-ban a `Patch<T>` típus különbözteti meg a "nem küldte" és a
+"kifejezetten null" esetet, így a `GiveScreen.js:789` szándékos törlése
+továbbra is működik, a mellékhatás viszont megszűnt.
+
+**2. A Gyűjtés képernyő szűrői nem csinálnak semmit.** *(nincs javítva)*
+
+A `CollectScreen.js:112-116` `bottle_type` és `min_quantity` query
+paramétereket küld, a `GET /offers` viszont csak a `status`-t és a
+`donor_id`-t nézi, és kliensoldali szűrés sincs. A palacktípus és a
+minimális mennyiség szűrő tehát **látszólag működik, valójában nem**.
+
+Szándékosan nem javítottam: ez viselkedésváltozás lenne, ami befolyásolja,
+mely felajánlások jelennek meg a térképen. Két `if` a `ListAsync`-ben, ha
+kell.
+
+### 5.3 Képfeltöltés
 
 A `multer` helyett `IFormFile` + `app.UseStaticFiles()`. A képek maradnak helyi
 lemezen a szerveren, ugyanabban a mappában, ugyanazzal az URL sémával — így a
@@ -571,6 +599,25 @@ A régi `Desktop/vissza` projekt innentől **csak olvasásra** szolgál referenc
 ---
 
 ## 11. Módosítási napló
+
+### 2026-08-13 — offers végpontcsoport
+
+- **Az `offers` csoport kész (5 végpont), 9/31.** Élesben tesztelve: szűrők,
+  404, 403, validáció. Író utak (POST/PUT/DELETE saját felajánláson) még nem,
+  mert a közös demo adatbázisba írnának.
+- **Nincs N+1:** a lista egyetlen SQL-t ad, `INNER JOIN` + `LEFT JOIN`-nal.
+  A régi megoldás két kört tett (lista + kötegelt user betöltés).
+- **Új: `Patch<T>`** a `Shared/Json`-ban. Megkülönbözteti a "nem küldte" és a
+  "kifejezetten null" esetet — e nélkül nem javítható az 5.2/1 hiba. A többi
+  `PUT` végpontnál is ezt fogjuk használni.
+- **Új: `DomainEnumConverter`.** Hibás enum értéknél a régi API üzenetét adja
+  ("Invalid bottle_type. Must be one of: ..."), a beépített konverter helyett,
+  ami .NET típusnevet szivárogtatna.
+- **Új: egységes hibaalak.** Minden hiba `{ "message": "..." }`, és az 500-as
+  válaszok élesben nem adják ki a kivétel szövegét (a régi igen).
+- **Query paraméterek kézzel kötve.** A snake_case névpolitika csak a JSON
+  törzsre vonatkozik, a `donor_id` query paraméterre nem.
+- **Két hiba dokumentálva** az 5.2 pontban.
 
 ### 2026-08-13 — az 1. fázis indulása
 
