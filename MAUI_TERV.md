@@ -521,9 +521,26 @@ Az 1. fázis megkezdéséhez el kell dőlnie, hol fut majd az API — lásd alá
     ```
 
     Ez **nem megoldás, csak mankó**: nem támogatott kombináció, és gyanúsan
-    pont a raszter-rajzolás nem működik alatta (lásd 7.6). Végleges javítás:
-    Xcode 26.6, vagy egy régebbi workload set a projektre pinelve
-    (`global.json` → `sdk.workloadVersion`).
+    pont a raszter-rajzolás nem működik alatta (lásd 7.6).
+
+    **A végleges javításhoz a `10.0.300.1` workload set kell.** Ez hozza a
+    `Microsoft.NET.Sdk.iOS 26.4.10259` csomagot, amiben a
+    `_RecommendedXcodeVersion` értéke **26.4** — pont a gépen lévő Xcode.
+    (A többi set 26.2-t vagy 26.5-öt hoz, utóbbi Xcode 26.6-ot kér.)
+
+    ```json
+    { "sdk": { "workloadVersion": "10.0.300.1" } }
+    ```
+
+    ```bash
+    sudo dotnet workload restore
+    ```
+
+    **Figyelem:** a `global.json`-t csak akkor tedd be, ha a workload set
+    telepítése is megtörtént. Egy nem telepített verzióra mutató pin
+    **minden buildet elront a repóban** — a sima konzol projektet is —,
+    `MSB4242` hibával. Ezért most nincs `global.json` a repóban.
+    Alternatíva: Xcode frissítés 26.6-ra, akkor semmilyen pin nem kell.
   - **Android:** nincs Android SDK a gépen. JDK 21 és 17 van, az megfelel.
 - **Csempeforrás éles üzemben** — lásd a 7.3 pontot; a fejlesztés OSM nyilvános
   csempékkel indul, az éles döntés később.
@@ -554,6 +571,24 @@ A régi `Desktop/vissza` projekt innentől **csak olvasásra** szolgál referenc
 ---
 
 ## 11. Módosítási napló
+
+### 2026-08-13 — az 1. fázis indulása
+
+- **Döntés: az iOS elhalasztva, az 1. fázis indul.** A toolchain rendbetétele
+  nem blokkolja az API-t; a `Vissza.Api` és a `Vissza.Shared` Xcode nélkül épül.
+- **Solution felállt:** `Vissza.sln`, `src/Vissza.Api`, `src/Vissza.Shared`.
+- **Az entitásokat kézzel írtuk, nem `dbcontext scaffold`-dal.** A scaffolder a
+  MySQL ENUM oszlopokat `string`-ként generálná, márpedig pont az enumok a
+  lényeg (4.1). A séma megvan `schema.sql`-ben, abból pontosabb modell írható.
+- **EF a 9-es sávon marad.** A Pomelo még nem adott ki EF Core 10-es verziót;
+  .NET 10-en az EF Core 9 gond nélkül fut.
+- **Az auth végpontcsoport (4 végpont) kész és élesben tesztelve** a valódi
+  adatbázis ellen. Egyezik a régi szerződéssel: 401 hiányzó tokenre, 403
+  érvénytelenre, ugyanazokkal az üzenetekkel.
+- **Igazolva: a `bcryptjs` hash-eket a `BCrypt.Net-Next` olvassa.** A meglévő
+  jelszavak működni fognak, nem kell jelszó-visszaállítás.
+- **`global.json` nincs a repóban** — egy nem telepített workload setre mutató
+  pin minden buildet elront (részletek a 9. fejezetben).
 
 ### 2026-08-13 — a 0. fázis indulása
 
