@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Vissza.Api/Vissza.Api.csproj" />
+    <Project Path="src/Vissza.Maui/Vissza.Maui.csproj" />
     <Project Path="src/Vissza.Shared/Vissza.Shared.csproj" />
   </Folder>
 </Solution>

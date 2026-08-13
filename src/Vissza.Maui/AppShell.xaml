@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:pages="clr-namespace:Vissza.Maui.Pages"
+       x:Class="Vissza.Maui.AppShell"
+       FlyoutBehavior="Disabled">
+
+    <!--
+        Két gyökér útvonal: bejelentkezés és a bejelentkezett app.
+        A GoToAsync("//login") és ("//home") vált közöttük, így a
+        vissza gomb nem tud visszalépni a kijelentkezés mögé.
+
+        A 3. fázisban a "home" helyére TabBar kerül a Dashboard, Give,
+        Collect, Messages és Settings lapokkal.
+    -->
+
+    <ShellContent Route="login"
+                  ContentTemplate="{DataTemplate pages:LoginPage}"
+                  Shell.FlyoutBehavior="Disabled" />
+
+    <ShellContent Route="home"
+                  Title="Felajánlások"
+                  ContentTemplate="{DataTemplate pages:HomePage}" />
+
+</Shell>

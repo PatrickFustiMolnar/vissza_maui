@@ -654,6 +654,55 @@ A régi `Desktop/vissza` projekt innentől **csak olvasásra** szolgál referenc
 
 ## 11. Módosítási napló
 
+### 2026-08-13 — 2. fázis: a MAUI váz megvan, de indításkor összeomlik
+
+**Elkészült és fordul** (iOS célra; Androidhoz még nincs SDK a gépen):
+
+- `Vissza.Maui` projekt, `Vissza.Shared` hivatkozással
+- **Téma**: `Colors.xaml` a régi `theme/index.js` teljes palettájával, világos
+  és sötét párokkal, `AppThemeBinding`-gal kötve. `Styles.xaml` a térköz-,
+  sarok- és betűméret-skálákkal és az alapstílusokkal.
+- **`IVisszaApi`**: mind a 31 végpont Refittel, a `Shared` DTO-kkal. Egy
+  elgépelt mezőnév itt fordítási hiba, nem futásidejű 500-as.
+- **`AuthService`**: token `SecureStorage`-ban (a régi app AsyncStorage-ban
+  tárolta, sima szövegként), munkamenet-visszaállítás ellenőrzéssel.
+- **`AuthTokenHandler`**: a Bearer token egy helyen kerül minden kérésre.
+- **`OfferCardView`** és **`BadgeView`**: az `OfferCard.js` leképezése. A
+  jelvényszínek `DataTrigger`ekben vannak, nem konverterben - egy konverter
+  témaváltáskor nem futna újra.
+- **`AppShell`** két gyökér útvonallal (`//login`, `//home`), `LoginPage` és
+  egy `HomePage`, ami a felajánlásokat listázza.
+
+**NYITOTT: az app indításkor natívan összeomlik az iOS szimulátoron.**
+
+`SIGSEGV` a `UIWindowScene` trait-felépítése közben (`libswiftObservation`,
+`_UISceneInterfaceProtectionClientComponent`), menedzselt veremnyom nélkül.
+
+Amit **kizártam** méréssel:
+
+| Gyanú | Eredmény |
+|---|---|
+| Téma (`Colors.xaml` + `Styles.xaml`) | **nem az** — üres `Application.Resources`-szal is összeomlik |
+| `AppShell` singleton regisztráció | nem oldotta meg a transientre váltás |
+| `App(IServiceProvider)` konstruktor | eltávolítva, nem oldotta meg |
+| `AppShell(AuthService)` konstruktor | eltávolítva, nem oldotta meg |
+| Oldalak DI-konstruktora | paraméter nélkülire cserélve (`ServiceHelper`), nem oldotta meg |
+
+Amit **tudunk**: a sablon szerinti `App` + `AppShell` **egy triviális, beágyazott
+`ContentPage`-dzsel elindul**. Vagyis a hiba a saját `AppShell.xaml` és a
+benne hivatkozott oldalak összeállításában van, nem a vázban és nem a témában.
+
+**Következő lépés a hibakereséshez:** a `MapSpike` bizonyítottan fut ezen a
+szimulátoron, tehát érdemes onnan visszafelé építkezni - a működő sablonhoz
+egyesével hozzáadni a `LoginPage`-et, a `HomePage`-et, majd az
+`OfferCardView`-t, és megnézni, melyik lépésnél omlik össze. A `BadgeView`
+sok `DataTrigger`-e és az `OfferCardView` `x:Reference`-alapú kötései a
+legvalószínűbb jelöltek.
+
+**Megjegyzés a buildhez:** a solution-szintű `dotnet build` mostantól elhasal
+az Android célon, mert nincs Android SDK. Az iOS cél fordul:
+`dotnet build src/Vissza.Maui/Vissza.Maui.csproj -f net10.0-ios -p:RuntimeIdentifier=iossimulator-arm64`
+
 ### 2026-08-13 — az 1. fázis API része kész (31/31)
 
 - **Mind a 31 végpont megvan**, kilenc csoportban. Élesben füstölve, nulla

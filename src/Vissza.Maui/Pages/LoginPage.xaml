@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Vissza.Maui.ViewModels"
+             x:Class="Vissza.Maui.Pages.LoginPage"
+             x:DataType="vm:LoginViewModel"
+             Title="Bejelentkezés"
+             Shell.NavBarIsVisible="False">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="16" VerticalOptions="Center">
+
+            <Label Text="ÜvegVissza"
+                   Style="{StaticResource HeadingLabel}"
+                   HorizontalOptions="Center" />
+
+            <Label Text="Jelentkezz be a folytatáshoz"
+                   Style="{StaticResource SecondaryLabel}"
+                   HorizontalOptions="Center"
+                   Margin="0,0,0,16" />
+
+            <Entry Placeholder="E-mail"
+                   Text="{Binding Email}"
+                   Keyboard="Email"
+                   IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
+
+            <Entry Placeholder="Jelszó"
+                   Text="{Binding Password}"
+                   IsPassword="True"
+                   IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
+
+            <Label Text="{Binding ErrorMessage}"
+                   IsVisible="{Binding HasError}"
+                   TextColor="{AppThemeBinding Light={StaticResource ErrorLight}, Dark={StaticResource ErrorDark}}"
+                   FontSize="{StaticResource FontSizeCaption}" />
+
+            <Button Text="Bejelentkezés"
+                    Command="{Binding SignInCommand}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}"
+                               HorizontalOptions="Center" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

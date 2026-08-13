@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Border xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+        x:Class="Vissza.Maui.Controls.BadgeView"
+        x:Name="Root"
+        StrokeThickness="0"
+        Padding="8,3"
+        HorizontalOptions="Start"
+        VerticalOptions="Center">
+
+    <!--
+        Színes jelvény: palacktípus vagy állapot.
+
+        A színpárok itt, DataTriggerekben vannak, nem konverterben. Egy
+        konverter témaváltáskor nem futna újra, az AppThemeBinding viszont
+        magától frissül - így a jelvény sötét módban is helyes marad.
+    -->
+
+    <Border.StrokeShape>
+        <RoundRectangle CornerRadius="6" />
+    </Border.StrokeShape>
+
+    <Border.Triggers>
+        <DataTrigger TargetType="Border" Binding="{Binding Kind, Source={x:Reference Root}}" Value="pet">
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource BadgePetBgLight}, Dark={StaticResource BadgePetBgDark}}" />
+        </DataTrigger>
+        <DataTrigger TargetType="Border" Binding="{Binding Kind, Source={x:Reference Root}}" Value="glass">
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource BadgeGlassBgLight}, Dark={StaticResource BadgeGlassBgDark}}" />
+        </DataTrigger>
+        <DataTrigger TargetType="Border" Binding="{Binding Kind, Source={x:Reference Root}}" Value="aluminum">
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource BadgeAluminumBgLight}, Dark={StaticResource BadgeAluminumBgDark}}" />
+        </DataTrigger>
+        <DataTrigger TargetType="Border" Binding="{Binding Kind, Source={x:Reference Root}}" Value="other">
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource BadgeOtherBgLight}, Dark={StaticResource BadgeOtherBgDark}}" />
+        </DataTrigger>
+        <DataTrigger TargetType="Border" Binding="{Binding Kind, Source={x:Reference Root}}" Value="active">
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource BadgeActiveBgLight}, Dark={StaticResource BadgeActiveBgDark}}" />
+        </DataTrigger>
+        <DataTrigger TargetType="Border" Binding="{Binding Kind, Source={x:Reference Root}}" Value="reserved">
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource BadgeReservedBgLight}, Dark={StaticResource BadgeReservedBgDark}}" />
+        </DataTrigger>
+        <DataTrigger TargetType="Border" Binding="{Binding Kind, Source={x:Reference Root}}" Value="neutral">
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource BadgeNeutralBgLight}, Dark={StaticResource BadgeNeutralBgDark}}" />
+        </DataTrigger>
+    </Border.Triggers>
+
+    <Label x:Name="BadgeLabel"
+           Text="{Binding Text, Source={x:Reference Root}}"
+           FontSize="{StaticResource FontSizeCaption}"
+           FontAttributes="Bold">
+        <Label.Triggers>
+            <DataTrigger TargetType="Label" Binding="{Binding Kind, Source={x:Reference Root}}" Value="pet">
+                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource BadgePetFgLight}, Dark={StaticResource BadgePetFgDark}}" />
+            </DataTrigger>
+            <DataTrigger TargetType="Label" Binding="{Binding Kind, Source={x:Reference Root}}" Value="glass">
+                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource BadgeGlassFgLight}, Dark={StaticResource BadgeGlassFgDark}}" />
+            </DataTrigger>
+            <DataTrigger TargetType="Label" Binding="{Binding Kind, Source={x:Reference Root}}" Value="aluminum">
+                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource BadgeAluminumFgLight}, Dark={StaticResource BadgeAluminumFgDark}}" />
+            </DataTrigger>
+            <DataTrigger TargetType="Label" Binding="{Binding Kind, Source={x:Reference Root}}" Value="other">
+                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource BadgeOtherFgLight}, Dark={StaticResource BadgeOtherFgDark}}" />
+            </DataTrigger>
+            <DataTrigger TargetType="Label" Binding="{Binding Kind, Source={x:Reference Root}}" Value="active">
+                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource BadgeActiveFgLight}, Dark={StaticResource BadgeActiveFgDark}}" />
+            </DataTrigger>
+            <DataTrigger TargetType="Label" Binding="{Binding Kind, Source={x:Reference Root}}" Value="reserved">
+                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource BadgeReservedFgLight}, Dark={StaticResource BadgeReservedFgDark}}" />
+            </DataTrigger>
+            <DataTrigger TargetType="Label" Binding="{Binding Kind, Source={x:Reference Root}}" Value="neutral">
+                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource BadgeNeutralFgLight}, Dark={StaticResource BadgeNeutralFgDark}}" />
+            </DataTrigger>
+        </Label.Triggers>
+    </Label>
+
+</Border>

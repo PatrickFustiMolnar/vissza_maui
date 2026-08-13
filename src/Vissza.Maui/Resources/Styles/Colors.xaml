@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <!--
+        A design tokenek egyetlen forrása, a régi theme/index.js palettájából.
+
+        A MAUI-ban egy Color erőforrás nem lehet önmagában témafüggő, ezért
+        minden token világos/sötét párként szerepel, és a felhasználás helyén
+        AppThemeBinding választ közülük. A két paletta ugyanazokat a kulcsokat
+        viseli - ez tartja karban, hogy egy stílus mindkét témában értelmes
+        maradjon.
+
+        Szín csak innen jöhet. Az oldalak nem írnak hexet.
+    -->
+
+    <!-- Felületek -->
+    <Color x:Key="BackgroundLight">#F9FAFB</Color>
+    <Color x:Key="BackgroundDark">#111827</Color>
+    <Color x:Key="SurfaceLight">#FFFFFF</Color>
+    <Color x:Key="SurfaceDark">#1F2937</Color>
+    <!-- Halványabb felszín: sávok, beágyazott mezők, másodlagos gombok -->
+    <Color x:Key="SurfaceMutedLight">#F3F4F6</Color>
+    <Color x:Key="SurfaceMutedDark">#374151</Color>
+
+    <!-- Szöveg -->
+    <Color x:Key="TextLight">#111827</Color>
+    <Color x:Key="TextDark">#F9FAFB</Color>
+    <Color x:Key="TextSecondaryLight">#6B7280</Color>
+    <Color x:Key="TextSecondaryDark">#9CA3AF</Color>
+    <!-- Színes (primary/error) háttéren - mindkét témában ugyanaz -->
+    <Color x:Key="TextOnAccent">#FFFFFF</Color>
+
+    <Color x:Key="BorderLight">#E5E7EB</Color>
+    <Color x:Key="BorderDark">#374151</Color>
+
+    <!-- Elsődleges -->
+    <Color x:Key="PrimaryLight">#059669</Color>
+    <Color x:Key="PrimaryDark">#10B981</Color>
+    <Color x:Key="PrimarySubtleLight">#ECFDF5</Color>
+    <Color x:Key="PrimarySubtleDark">#064E3B</Color>
+    <!-- Kiemelt szám halvány primary háttéren -->
+    <Color x:Key="PrimaryStrongLight">#047857</Color>
+    <Color x:Key="PrimaryStrongDark">#34D399</Color>
+
+    <!-- Állapotszínek -->
+    <Color x:Key="ErrorLight">#DC2626</Color>
+    <Color x:Key="ErrorDark">#EF4444</Color>
+    <Color x:Key="ErrorSubtleLight">#FEE2E2</Color>
+    <Color x:Key="ErrorSubtleDark">#7F1D1D</Color>
+
+    <Color x:Key="WarningLight">#F59E0B</Color>
+    <Color x:Key="WarningDark">#F59E0B</Color>
+    <Color x:Key="WarningSubtleLight">#FFF7ED</Color>
+    <Color x:Key="WarningSubtleDark">#431407</Color>
+
+    <Color x:Key="SuccessBorderLight">#BBF7D0</Color>
+    <Color x:Key="SuccessBorderDark">#065F46</Color>
+
+    <Color x:Key="InfoLight">#3B82F6</Color>
+    <Color x:Key="InfoDark">#60A5FA</Color>
+    <Color x:Key="InfoSubtleLight">#EFF6FF</Color>
+    <Color x:Key="InfoSubtleDark">#172554</Color>
+
+    <Color x:Key="DisabledLight">#D1D5DB</Color>
+    <Color x:Key="DisabledDark">#4B5563</Color>
+
+    <!-- Csillag-arany. Szándékosan témafüggetlen. -->
+    <Color x:Key="StarGold">#FBBF24</Color>
+
+    <!--
+        Jelvények: palacktípus és állapot.
+        A BadgeColorConverter oldja fel őket kulcs és téma szerint.
+    -->
+    <Color x:Key="BadgePetBgLight">#DBEAFE</Color>
+    <Color x:Key="BadgePetBgDark">#1E3A8A</Color>
+    <Color x:Key="BadgePetFgLight">#1E40AF</Color>
+    <Color x:Key="BadgePetFgDark">#BFDBFE</Color>
+
+    <Color x:Key="BadgeGlassBgLight">#FEF3C7</Color>
+    <Color x:Key="BadgeGlassBgDark">#78350F</Color>
+    <Color x:Key="BadgeGlassFgLight">#92400E</Color>
+    <Color x:Key="BadgeGlassFgDark">#FDE68A</Color>
+
+    <Color x:Key="BadgeAluminumBgLight">#F3F4F6</Color>
+    <Color x:Key="BadgeAluminumBgDark">#374151</Color>
+    <Color x:Key="BadgeAluminumFgLight">#374151</Color>
+    <Color x:Key="BadgeAluminumFgDark">#D1D5DB</Color>
+
+    <Color x:Key="BadgeOtherBgLight">#E9D5FF</Color>
+    <Color x:Key="BadgeOtherBgDark">#581C87</Color>
+    <Color x:Key="BadgeOtherFgLight">#6B21A8</Color>
+    <Color x:Key="BadgeOtherFgDark">#E9D5FF</Color>
+
+    <Color x:Key="BadgeActiveBgLight">#ECFDF5</Color>
+    <Color x:Key="BadgeActiveBgDark">#064E3B</Color>
+    <Color x:Key="BadgeActiveFgLight">#059669</Color>
+    <Color x:Key="BadgeActiveFgDark">#6EE7B7</Color>
+
+    <Color x:Key="BadgeReservedBgLight">#FFF7ED</Color>
+    <Color x:Key="BadgeReservedBgDark">#431407</Color>
+    <Color x:Key="BadgeReservedFgLight">#F59E0B</Color>
+    <Color x:Key="BadgeReservedFgDark">#FCD34D</Color>
+
+    <Color x:Key="BadgeNeutralBgLight">#F3F4F6</Color>
+    <Color x:Key="BadgeNeutralBgDark">#374151</Color>
+    <Color x:Key="BadgeNeutralFgLight">#6B7280</Color>
+    <Color x:Key="BadgeNeutralFgDark">#9CA3AF</Color>
+
+</ResourceDictionary>

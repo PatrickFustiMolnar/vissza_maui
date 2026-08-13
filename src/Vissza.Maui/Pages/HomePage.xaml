@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:Vissza.Maui.Controls"
+             xmlns:dtos="clr-namespace:Vissza.Shared.Dtos;assembly=Vissza.Shared"
+             xmlns:vm="clr-namespace:Vissza.Maui.ViewModels"
+             x:Class="Vissza.Maui.Pages.HomePage"
+             x:DataType="vm:HomeViewModel"
+             Title="Felajánlások">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Kijelentkezés" Command="{Binding SignOutCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <Grid RowDefinitions="Auto,Auto,*">
+
+        <Label Text="{Binding Greeting}"
+               Margin="16,12"
+               FontSize="{StaticResource FontSizeTitle}" />
+
+        <Label Grid.Row="1"
+               Text="{Binding ErrorMessage}"
+               IsVisible="{Binding HasError}"
+               Margin="16,0,16,8"
+               TextColor="{AppThemeBinding Light={StaticResource ErrorLight}, Dark={StaticResource ErrorDark}}"
+               FontSize="{StaticResource FontSizeCaption}" />
+
+        <RefreshView Grid.Row="2"
+                     IsRefreshing="{Binding IsBusy}"
+                     Command="{Binding LoadCommand}">
+            <CollectionView ItemsSource="{Binding Offers}">
+
+                <CollectionView.EmptyView>
+                    <Label Text="Nincs megjeleníthető felajánlás."
+                           Margin="16"
+                           HorizontalOptions="Center"
+                           Style="{StaticResource SecondaryLabel}" />
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="dtos:OfferDto">
+                        <controls:OfferCardView Offer="{Binding .}"
+                                                ShowStatus="True"
+                                                TapCommand="{Binding BindingContext.OpenOfferCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}}" />
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+            </CollectionView>
+        </RefreshView>
+
+    </Grid>
+
+</ContentPage>
