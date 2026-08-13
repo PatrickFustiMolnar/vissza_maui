@@ -333,16 +333,28 @@ Az új API-ban a `Patch<T>` típus különbözteti meg a "nem küldte" és a
 "kifejezetten null" esetet, így a `GiveScreen.js:789` szándékos törlése
 továbbra is működik, a mellékhatás viszont megszűnt.
 
-**2. A Gyűjtés képernyő szűrői nem csinálnak semmit.** *(nincs javítva)*
+**2. A Gyűjtés képernyő szűrői nem csinálnak semmit.** *(felerészben javítva)*
 
-A `CollectScreen.js:112-116` `bottle_type` és `min_quantity` query
-paramétereket küld, a `GET /offers` viszont csak a `status`-t és a
-`donor_id`-t nézi, és kliensoldali szűrés sincs. A palacktípus és a
-minimális mennyiség szűrő tehát **látszólag működik, valójában nem**.
+A `CollectScreen` szűrő-ablaka négy beállítást kínál, és a portoláskor
+kiderült, hogy **egyik sem hat**. A `getFilteredContent` (`CollectScreen.js:284`)
+egy külön szűrőkészletet alkalmaz (`searchQuery`, `quickFilter`), a `filters`
+objektumhoz pedig hozzá sem nyúl.
 
-Szándékosan nem javítottam: ez viselkedésváltozás lenne, ami befolyásolja,
-mely felajánlások jelennek meg a térképen. Két `if` a `ListAsync`-ben, ha
-kell.
+| Szűrő | Régi állapot | Most |
+|---|---|---|
+| `bottleType` | elküldve, az API figyelmen kívül hagyta | **működik** (`bottle_type`) |
+| `minQuantity` | elküldve, az API figyelmen kívül hagyta | **működik** (`min_quantity`) |
+| `maxDistance` | el sem küldve, kliensoldalon sem alkalmazva | továbbra sem hat |
+| `sortBy` | el sem küldve, kliensoldalon sem alkalmazva | továbbra sem hat |
+
+Az első kettő tisztán szerveroldali volt, ezért megcsináltuk: a meglévő RN
+kliens változtatás nélkül működni fog tőlük.
+
+A másik kettőhöz kliensoldali munka is kell — a távolsághoz és a távolság
+szerinti rendezéshez a felhasználó pozíciója szükséges, ami a kliensnél van.
+Ezek a **3. fázisba** tartoznak, a `CollectPage` megírásakor. A `sortBy`
+"quantity" és "newest" ága szerveroldalon is menne, de a háromból kettőt
+kliensen, egyet szerveren rendezni rosszabb, mint mindhármat egy helyen.
 
 ### 5.3 Képfeltöltés
 
@@ -618,6 +630,9 @@ A régi `Desktop/vissza` projekt innentől **csak olvasásra** szolgál referenc
 - **Query paraméterek kézzel kötve.** A snake_case névpolitika csak a JSON
   törzsre vonatkozik, a `donor_id` query paraméterre nem.
 - **Két hiba dokumentálva** az 5.2 pontban.
+- **A Gyűjtés képernyő `bottle_type` és `min_quantity` szűrője él** (döntés).
+  A meglévő RN kliens változtatás nélkül működni fog tőlük. A `maxDistance`
+  és a `sortBy` a 3. fázisra marad, mert kliensoldali pozíció kell hozzájuk.
 
 ### 2026-08-13 — az 1. fázis indulása
 

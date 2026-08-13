@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vissza.Api.Data;
@@ -7,6 +8,7 @@ using Vissza.Api.Mapping;
 using Vissza.Api.Services;
 using Vissza.Shared.Dtos;
 using Vissza.Shared.Enums;
+using Vissza.Shared.Json;
 
 namespace Vissza.Api.Endpoints;
 
@@ -31,24 +33,34 @@ public static class OfferEndpoints
         // névpolitika viszont csak a JSON törzsre vonatkozik - ezért kell
         // a kötést itt kézzel megadni.
         [FromQuery(Name = "status")] string? status = null,
-        [FromQuery(Name = "donor_id")] int? donorId = null)
+        [FromQuery(Name = "donor_id")] int? donorId = null,
+        [FromQuery(Name = "bottle_type")] string? bottleType = null,
+        [FromQuery(Name = "min_quantity")] int? minQuantity = null)
     {
         var query = db.Offers.AsNoTracking();
 
         if (!string.IsNullOrEmpty(status))
         {
-            // Kis-nagybetű független, mert a query paraméter kötése nem az.
-            if (!Enum.TryParse<OfferStatus>(status, ignoreCase: true, out var parsed))
-            {
-                return Results.BadRequest(new MessageResponse(
-                    "Invalid status. Must be one of: active, reserved, completed, cancelled"));
-            }
+            if (!TryParseEnum<OfferStatus>(status, out var parsed, out var error))
+                return Results.BadRequest(error);
 
             query = query.Where(o => o.Status == parsed);
         }
 
         if (donorId is not null)
             query = query.Where(o => o.DonorId == donorId);
+
+        if (!string.IsNullOrEmpty(bottleType))
+        {
+            if (!TryParseEnum<BottleType>(bottleType, out var parsed, out var error))
+                return Results.BadRequest(error);
+
+            query = query.Where(o => o.BottleType == parsed);
+        }
+
+        // A kliens csak pozitív értéket küld; a 0 és a negatív "nincs szűrés".
+        if (minQuantity is > 0)
+            query = query.Where(o => o.Quantity >= minQuantity);
 
         var offers = await query
             .OrderByDescending(o => o.CreatedAt)
@@ -194,6 +206,29 @@ public static class OfferEndpoints
         await db.SaveChangesAsync(ct);
 
         return Results.Ok(new MessageResponse("Offer deleted successfully"));
+    }
+
+    /// <summary>
+    /// Enum query paraméter feldolgozása. Kis-nagybetű független, mert a
+    /// query paraméterek kötése nem megy át a JSON konverteren - a hibaüzenet
+    /// viszont ugyanaz, mint amit a törzsben lévő rossz érték adna.
+    /// </summary>
+    static bool TryParseEnum<TEnum>(string text, out TEnum value, out MessageResponse error)
+        where TEnum : struct, Enum
+    {
+        if (Enum.TryParse(text, ignoreCase: true, out value) && Enum.IsDefined(value))
+        {
+            error = null!;
+            return true;
+        }
+
+        var wireName = typeof(TEnum).GetCustomAttribute<WireNameAttribute>()?.Name
+            ?? typeof(TEnum).Name.ToLowerInvariant();
+
+        var allowed = string.Join(", ", Enum.GetNames<TEnum>().Select(n => n.ToLowerInvariant()));
+
+        error = new MessageResponse($"Invalid {wireName}. Must be one of: {allowed}");
+        return false;
     }
 
     /// <summary>
