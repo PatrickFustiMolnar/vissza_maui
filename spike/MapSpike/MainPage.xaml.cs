@@ -7,6 +7,7 @@ using NetTopologySuite.Geometries;
 using MBrush = Mapsui.Styles.Brush;
 using MColor = Mapsui.Styles.Color;
 using MPen = Mapsui.Styles.Pen;
+using MapsuiMap = Mapsui.Map;
 using MStyle = Mapsui.Styles.IStyle;
 using MSymbolStyle = Mapsui.Styles.SymbolStyle;
 using MSymbolType = Mapsui.Styles.SymbolType;
@@ -28,6 +29,11 @@ public partial class MainPage : ContentPage
     const double MercatorExtent = 20037508.34;
 
     MemoryLayer? _veilLayer;
+
+    // A Mapsui 5-ben a találatkeresés lusta: meg kell adni, mely rétegeken
+    // keressen. A 4-es IsMapInfoLayer jelző már nincs.
+    readonly List<ILayer> _tappableLayers = new();
+
     bool _darkMode;
 
     public MainPage()
@@ -68,7 +74,7 @@ public partial class MainPage : ContentPage
 
     void BuildMap(double lat, double lng, string source)
     {
-        var map = new Map();
+        var map = new MapsuiMap();
 
         // A rétegsorrend számít: a fátyol a csempék fölé, de a markerek alá kerül,
         // különben a markereket is sötétítené.
@@ -79,8 +85,15 @@ public partial class MainPage : ContentPage
         map.Layers.Add(_veilLayer);
 
         map.Layers.Add(CreateRadiusLayer(lat, lng, RadiusMeters));
-        map.Layers.Add(CreateOfferLayer(lat, lng));
-        map.Layers.Add(CreateUserLayer(lat, lng));
+
+        var offerLayer = CreateOfferLayer(lat, lng);
+        var userLayer = CreateUserLayer(lat, lng);
+        map.Layers.Add(offerLayer);
+        map.Layers.Add(userLayer);
+
+        _tappableLayers.Clear();
+        _tappableLayers.Add(offerLayer);
+        _tappableLayers.Add(userLayer);
 
         var center = ToMercator(lng, lat);
 
@@ -207,7 +220,9 @@ public partial class MainPage : ContentPage
     // 4. kritérium: koppintás a markeren
     void OnMapInfo(object? sender, MapInfoEventArgs e)
     {
-        var feature = e.MapInfo?.Feature;
+        // A csempe- és a sugárréteget szándékosan kihagyjuk a találatkeresésből:
+        // különben a kör bárhová koppintva "eltalálódna".
+        var feature = e.GetMapInfo(_tappableLayers)?.Feature;
 
         if (feature?["title"] is null)
         {

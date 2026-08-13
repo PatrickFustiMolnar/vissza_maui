@@ -468,6 +468,27 @@ Ha bármelyik pont nem megy ésszerű időn belül, **itt állunk meg és újra 
 — nem a 3. fázis közepén, 11 oldal megírása után. A tartalék irány egy WebView +
 MapLibre réteg, ami HTML markereket használ.
 
+### 7.6 A spike állása (2026-08-13, iOS szimulátor)
+
+| # | Kritérium | Állapot |
+|---|---|---|
+| 1 | OSM térkép kulcs nélkül, attribúcióval | **részben** — attribúció megvan, csempe nem rajzolódik |
+| 2 | Helyzet a helyes ponton, vetítés ellenőrizve | **OK** — a képernyőn ugyanaz a Mercator érték, mint a harnessben |
+| 3 | 20+ saját, színes marker, akadás nélkül | **OK** — 24 marker, a görgetés sima |
+| 4 | Markerre koppintva részletpanel | **OK** — a helyes felajánlás adataival |
+| 5 | Sugárkör | **OK** — NTS `Buffer()` poligon |
+| 6 | Sötét mód | **nem** — a fátyol nem rajzolódik |
+
+**A két hiányzó pont közös jellemzője:** mindkettő nagy felületű rajzolás (a
+raszter csempe és a világméretű fátyol-poligon), miközben a vektoros elemek
+(markerek, kör) hibátlanul mennek. A csempék **letöltése sikeres** — 25 HTTP
+kérés, mind `finished successfully` —, tehát nem hálózati gond, hanem rajzolás.
+
+Mivel a build nem támogatott Xcode-kombináción készült, kikapcsolt verzió-
+ellenőrzéssel és `MtouchLink=SdkOnly`-val, **egyelőre nem eldönthető, hogy
+Mapsui-hiba vagy a toolchain műterméke.** Ezért a következő lépés a toolchain
+rendbetétele, nem a Mapsui cseréje.
+
 ---
 
 ## 8. Ütemezés
@@ -490,10 +511,18 @@ Az 1. fázis megkezdéséhez el kell dőlnie, hol fut majd az API — lásd alá
 
 ## 9. Nyitott kérdések
 
-- **Mobil build toolchain** *(a 0. fázis vizuális részét blokkolja)*
+- **Mobil build toolchain** *(a 0. fázis lezárását blokkolja)*
   - **iOS:** a telepített .NET iOS SDK (26.5.10301) **Xcode 26.6-ot vár**, a
-    gépen Xcode 26.4 van. Vagy Xcode-frissítés (nagy letöltés, a szabad 15 GB
-    kevés lehet), vagy egy régebbi workload set a projektre pinelve
+    gépen Xcode 26.4 van. Ideiglenes kerülőút, amivel a spike lefordult:
+
+    ```
+    dotnet build -f net10.0-ios -p:RuntimeIdentifier=iossimulator-arm64 \
+      -p:ValidateXcodeVersion=false -p:MtouchLink=SdkOnly
+    ```
+
+    Ez **nem megoldás, csak mankó**: nem támogatott kombináció, és gyanúsan
+    pont a raszter-rajzolás nem működik alatta (lásd 7.6). Végleges javítás:
+    Xcode 26.6, vagy egy régebbi workload set a projektre pinelve
     (`global.json` → `sdk.workloadVersion`).
   - **Android:** nincs Android SDK a gépen. JDK 21 és 17 van, az megfelel.
 - **Csempeforrás éles üzemben** — lásd a 7.3 pontot; a fejlesztés OSM nyilvános
