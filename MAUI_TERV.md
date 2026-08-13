@@ -4,7 +4,8 @@
 > történő átírásának terve. A meglévő projekt nem módosul; a munka ebben a
 > külön repóban folyik.
 >
-> Készült: 2026-08-01
+> Készült: 2026-08-01 · Utolsó módosítás: 2026-08-13
+> (a változásokat lásd a [11. fejezetben](#11-módosítási-napló))
 
 ---
 
@@ -23,20 +24,22 @@ gondolkodni a "frontend" és a "backend" projektről.
 
 Az eredeti elképzelés az volt, hogy a MAUI code-behindból közvetlenül lehessen
 lekérdezni a MySQL-t, backend nélkül — ahogy egy belsős LOB alkalmazásnál
-szokás. **Elvetve**, négy okból:
+szokás. **Elvetve**, három okból:
 
-1. **Nem spórol hostingot.** Az adatbázis ma is egy VPS-en fut, ugyanazon a
-   gépen, mint az API. Az API eltávolítása nem szüntet meg egy szervert sem,
-   csak a 3306-os portot kellene kinyitni a világ felé a 3000-es helyett.
-2. **A connection string a felhasználó telefonjára kerülne.** Az APK/IPA
+> **Javítva 2026-08-13.** Eredetileg negyedik indokként az szerepelt, hogy a
+> direkt kapcsolat nem spórol hostingot. Ez ebben a setupban **téves volt**: a
+> Hostinger csomag a távoli MySQL-t adja, tehát backend nélkül tényleg nem
+> kellene semmit hozzátenni. Az alábbi három indok viszont önmagában is döntő.
+
+1. **A connection string a felhasználó telefonjára kerülne.** Az APK/IPA
    visszafejtése triviális, a .NET IL assembly-k különösen. Ezzel bárki, aki
    telepítette az appot, hozzáférne minden felhasználó `email`, `phone`,
    `password_hash` és `default_address` mezőjéhez, az összes privát üzenethez,
    és tetszőlegesen módosíthatná vagy törölhetné az adatokat.
-3. **Az üzleti szabályok kikényszeríthetetlenek lennének.** A kétoldalú átvételi
+2. **Az üzleti szabályok kikényszeríthetetlenek lennének.** A kétoldalú átvételi
    megerősítés, a login rate limit és a tranzakciós atomicitás mind olyasmi, ami
    csak akkor ér valamit, ha a kliens nem tudja megkerülni.
-4. **Connection pool.** Ma egyetlen kliens (a backend) tart 10 kapcsolatot.
+3. **Connection pool.** Ma egyetlen kliens (a backend) tart 10 kapcsolatot.
    Direkt kapcsolódásnál minden telefon önálló kliens; a MySQL alapértelmezett
    `max_connections` értéke 151. Néhány száz egyidejű felhasználónál a szerver
    elutasítaná az új kapcsolatokat.
@@ -57,11 +60,29 @@ Egy `.sln`, három projekt, egy repo, egy deploy. A `Shared` projekt miatt a
 szerver és a kliens fordítási időben ugyanazokat a típusokat használja — ez az,
 amit a mostani JS/JS felállás nem tud nyújtani.
 
-### 1.5 Elfogadott: a térkép platform handlerrel
+### 1.5 Elfogadott: a térkép Mapsui + OpenStreetMap
 
-Lásd a [7. fejezetet](#7-térkép-platform-handler). Három lehetőség közül
-(platform handler, Mapsui, Maui.GoogleMaps) a **platform handler** a döntés:
-teljes kontroll a natív térkép fölött, cserébe platformonkénti kód.
+Lásd a [7. fejezetet](#7-térkép-mapsui--openstreetmap).
+
+Az első döntés a **platform handler** volt: a MAUI beépített `Map` kontrollját
+szabtuk volna testre, platformonkénti kóddal. Ezt **felülírta** az a követelmény,
+hogy semmilyen szinten ne legyen API kulcs — a MAUI `Map` ugyanis Androidon a
+Google Maps SDK-ra épül, ami kulcs nélkül el sem indul.
+
+Ezért a döntés a **Mapsui**: OSM tile-ok, kulcs nélkül, saját markerek tisztán
+C#-ból, és **nulla platformspecifikus fájl**. Kevesebb munka, mint a handler, és
+teljesíti a kulcsmentességet.
+
+### 1.6 Elfogadott: domain és HTTPS a meglévő Hostinger csomagon
+
+A `fustimolnarpatrick.com` domain már megvan, és a Hostinger automatikusan
+kiállítja rá a Let's Encrypt tanúsítványt (ellenőrizve 2026-08-13-án: érvényes
+2026-10-19-ig, automatikus megújítással). Az API egy `api.fustimolnarpatrick.com`
+aldomaint kap ugyanezzel a mechanizmussal.
+
+Így a telefonban **nem IP-cím** lesz beégetve, hanem név. Szerverváltásnál egy
+DNS-rekord átírása elég; IP-vel minden telepített app megállna, amíg egy új
+áruházi verzió át nem megy a review-n.
 
 ---
 
@@ -69,22 +90,38 @@ teljes kontroll a natív térkép fölött, cserébe platformonkénti kód.
 
 ```mermaid
 flowchart TD
-    A["Vissza.Maui<br/>iOS és Android"] -->|HTTPS + JWT| B
-    subgraph VPS["Egy VPS, egy deploy"]
-        B["Vissza.Api<br/>Minimal API, EF Core"] --> C["MySQL<br/>csak belső hálózat"]
-    end
+    A["Vissza.Maui<br/>iOS és Android"] -->|"HTTPS + JWT<br/>api.fustimolnarpatrick.com"| B
+    A -.->|"csempék, HTTPS"| T["OSM tile szerver"]
+    B["Vissza.Api<br/>Minimal API, EF Core"] --> C["MySQL<br/>Hostinger távoli DB"]
 ```
 
 Kulcspontok:
 
 - A telefon **soha nem beszél az adatbázissal**, csak az API-val, HTTPS-en.
-- A MySQL portja kifelé zárva marad — csak az API éri el, ugyanarról a gépről.
-- Az API és az adatbázis ugyanazon a szerveren fut, mint ma. **Nincs új
-  üzemeltetési egység.**
+- Az API **névvel** érhető el, nem IP-vel — lásd az 1.6 pontot.
+- A térkép csempéi közvetlenül az OSM-től jönnek, az API megkerülésével. Ez az
+  egyetlen külső hívás az appból, és nem tartalmaz felhasználói adatot.
 
-> A konkrét szerver IP-cím, adatbázisnév és jelszavak nem kerülnek ebbe a
-> repóba. Ezek a régi projekt `backend/.env` fájljában vannak, és az új
-> API-ban is `.env` / user secrets / környezeti változó formájában maradnak.
+### 2.1 A jelenlegi üzemeltetési kép
+
+Felmérve 2026-08-13-án:
+
+| Elem | Hol | Állapot |
+|---|---|---|
+| Domain, weboldal | `46.202.172.200` (Hostinger shared) | él, HTTPS aktív |
+| MySQL | Hostinger távoli MySQL, port 3306 | él, kívülről elérhető |
+| Backend API | — | **sehol nem fut** |
+
+A régi projekt `database.js`-ében szereplő produkciós API URL sosem lett
+élesítve; az alkalmazás eddig kizárólag a fejlesztői gépen futó backenddel
+működött, ami a Hostinger távoli MySQL-jéhez kapcsolódott.
+
+**Következmény:** az API futtatásához kell egy hely. A jelenlegi shared hosting
+csomag hosszan futó .NET (és Node) processzt nem tud kiszolgálni. Lásd a
+[9. fejezet](#9-nyitott-kérdések) első kérdését.
+
+> A konkrét adatbázis-jelszavak és a JWT titok nem kerülnek ebbe a repóba —
+> `.env` / user secrets / környezeti változó formájában maradnak.
 
 ---
 
@@ -107,8 +144,8 @@ vissza_maui/
 │   └── Vissza.Maui/         MAUI alkalmazás
 │       ├── Pages/           XAML oldalak
 │       ├── ViewModels/
-│       ├── Controls/        OfferCardView, térkép
-│       ├── Platforms/       iOS és Android handler kód
+│       ├── Controls/        OfferCardView, VisszaMapView
+│       ├── Maps/            Mapsui réteg: markerek, csempék, vetítés
 │       ├── Services/        ApiClient, AuthService
 │       └── Resources/       stílusok, ikonok
 └── tests/
@@ -129,7 +166,12 @@ csak POCO DTO-kat és enumokat.
 | Api | beépített `AddRateLimiter` | az `express-rate-limit` helyett |
 | Maui | `CommunityToolkit.Mvvm` | `ObservableObject`, `RelayCommand` |
 | Maui | `Refit.HttpClientFactory` | tipizált API kliens |
-| Maui | `Microsoft.Maui.Controls.Maps` | térkép alap |
+| Maui | `Mapsui.UI.Maui` | térkép, OSM csempékkel, API kulcs nélkül |
+| Maui | `Mapsui.Nts` | sugárkör poligonná alakítása |
+
+A `Microsoft.Maui.Controls.Maps` **nem** kerül be — lásd az 1.5 és a 7. pontot.
+A `Platforms/` mappa marad, de csak a MAUI alap sablonfájlokat tartalmazza;
+saját platformspecifikus kódot nem tervezünk.
 
 **Fontos:** a `BCrypt.Net-Next` ugyanazt a `$2a$`/`$2b$` formátumot olvassa, mint
 a `bcryptjs`, tehát **a meglévő felhasználói jelszavak működni fognak** — nincs
@@ -319,79 +361,92 @@ Egyik sem az 1-4. fázis része — a migráció után jönnek.
 
 ---
 
-## 7. Térkép: platform handler
+## 7. Térkép: Mapsui + OpenStreetMap
 
 **Ez a terv legkockázatosabb eleme, ezért kerül az első fázisba.**
 
 ### 7.1 A probléma
 
-A `Microsoft.Maui.Controls.Maps` `Map` kontrollja csak `Pin`-t ismer: cím,
-felirat, típus. A jelenlegi app viszont **saját nézeteket rajzol markerként** —
-a téma elsődleges színével festett kört, benne ikonnal, a `DashboardScreen` és a
-`CollectScreen` térképein. Emellett a térkép sötét módban követi az app témáját.
+A jelenlegi app **saját nézeteket rajzol markerként** — a téma elsődleges
+színével festett kört, benne ikonnal, a `DashboardScreen` és a `CollectScreen`
+térképein. Emellett a térkép sötét módban követi az app témáját.
 
-Ami a beépített kontrollal **működik**:
+A MAUI beépített `Map` kontrollja ezt nem tudja: csak `Pin`-t ismer (standard
+csepp alak, felirattal). Ráadásul **Androidon a Google Maps SDK-ra épül**, ami
+API kulcs nélkül el sem indul — ez pedig kizárt követelmény.
 
-- `Circle`, `Polyline`, `Polygon` `MapElement`-ként — a sugárkör megvan
-- kamera pozicionálás, felhasználó helyzete
+### 7.2 A megoldás: Mapsui
 
-Ami **nem**:
+A Mapsui nyílt forrású .NET térképkomponens, SkiaSharp vászonra rajzol. Ezért
+tetszőleges marker natívan megy, **közös C# kódból, platformspecifikus fájl
+nélkül**. Csempéket bármilyen forrásból tud, alapból OSM-ből, kulcs nélkül.
 
-- tetszőleges nézet markerként
-- a térkép sötét stílusa
+| Feladat | Hogyan |
+|---|---|
+| Térkép kontroll | `Mapsui.UI.Maui.MapControl` XAML-ből |
+| Csempék | `OpenStreetMap.CreateTileLayer()` (`Mapsui.Tiling`) |
+| Markerek | `MemoryLayer` + `PointFeature` + `ImageStyle` |
+| Marker grafika | egy SVG per markertípus, futásidőben színezve |
+| Koppintás | `MapControl.Info` esemény → a találat `PointFeature`-je |
+| Sugárkör | `Mapsui.Nts`, a pont `Buffer()`-e poligonná, `VectorStyle`-lal |
+| Helymeghatározás | MAUI Essentials `Geolocation` — nem kell hozzá kulcs |
 
-### 7.2 A megoldás
-
-Saját handler, ami a natív térképobjektumot éri el:
-
-| Platform | `PlatformView` | Marker testreszabás |
-|---|---|---|
-| iOS | `MKMapView` | `GetViewForAnnotation` → saját `MKAnnotationView`, `Image` tulajdonsággal |
-| Android | `Android.Gms.Maps.GoogleMap` | `MarkerOptions.SetIcon(BitmapDescriptorFactory.FromBitmap(...))` |
-
-Regisztráció a `MauiProgram.cs`-ben:
-
-```csharp
-builder.ConfigureMauiHandlers(handlers =>
-    handlers.AddHandler<Map, VisszaMapHandler>());
-```
-
-Vagy nem-invazívan, a meglévő handler kiegészítésével:
+**Vetítési buktató.** A Mapsui belül gömbi Mercatorban (EPSG:3857) dolgozik, az
+adatbázisban viszont WGS84 fok van (`location_lat`, `location_lng`). Minden
+koordinátát át kell váltani:
 
 ```csharp
-MapHandler.Mapper.AppendToMapping("VisszaPins", (handler, map) =>
-{
-    // platformspecifikus beállítás a handler.PlatformView-n
-});
+var p = SphericalMercator.FromLonLat(offer.LocationLng, offer.LocationLat);
 ```
 
-**A marker bitmap közös kódból.** Ahelyett, hogy iOS-en és Androidon külön
-rajzolnánk a markert, a `Microsoft.Maui.Graphics` segítségével egyszer
-generáljuk a képet (kör + ikon + témaszín), és mindkét platform ugyanazt a
-bitmapet kapja. Így a platformkód csak annyi, hogy "ezt a bitmapet tedd ide" —
-a megjelenés egy helyen van definiálva.
+Figyelem a paraméterek sorrendjére: **először hosszúság, utána szélesség.**
+Felcserélve nem hibázik, csak rossz helyre teszi a markert — ez a leggyakoribb
+Mapsui-hiba.
 
-**Sötét stílus:**
+### 7.3 A csempeforrás kérdése
 
-- Android: `GoogleMap.SetMapStyle(new MapStyleOptions(json))` — a jelenlegi
-  projekt stílus-JSON-ja átvihető
-- iOS: `MKMapView.OverrideUserInterfaceStyle` az app témájához igazítva
+Az OSM nyilvános csempeszervere ingyenes, de a használati szabályzata
+**alkalmazás-szintű forgalomra nem engedélyezi**. Fejlesztéshez rendben, éles
+appal több száz felhasználóval nem. Három út, döntés az éles indulás előtt:
 
-**Android beállítás:** Google Maps API kulcs kell az `AndroidManifest.xml`-be,
-és `builder.UseMauiMaps()` a `MauiProgram`-ban.
+1. **OSM nyilvános csempék** — most, a fejlesztés idejére
+2. **Ingyenes szintű szolgáltató** (MapTiler, Stadia) — bőven elég kvóta, de ott
+   is van kulcs, csak nem Google
+3. **Saját csempeszerver** — igazi nulla külső függőség; Magyarország csempéi
+   néhány GB, viszont üzemeltetni kell
 
-### 7.3 Mit kell a spike-nak bizonyítania
+Csak a 3. teljesíti maradéktalanul a "semmilyen kulcs" elvárást.
+
+**Attribúció kötelező.** Az OSM licence megköveteli a látható
+"© OpenStreetMap contributors" feliratot a térképen. Ez nem opcionális, és a
+`VisszaMapView` részévé kell tenni.
+
+### 7.4 Sötét mód
+
+Ez a leggyengébb pont a kulcsmentes úton: az OSM alapcsempék csak világos
+változatban léteznek. Két lehetőség, a spike dönti el, melyik néz ki
+elfogadhatóan:
+
+- **Skia színszűrő** a csemperétegen (invertálás + telítettség csökkentés)
+- **sötétítő fedőréteg** félig átlátszó sötét poligonnal
+
+A kész sötét csempekészletek (CARTO dark matter, Stadia Alidade Dark) szebbek,
+de fiókhoz és kulcshoz kötöttek.
+
+### 7.5 Mit kell a spike-nak bizonyítania
 
 A 0. fázis akkor sikeres, ha egy eldobható MAUI appban **mindkét platformon**:
 
-1. megjelenik a térkép a felhasználó helyzetével
-2. legalább 20 saját, színes marker látszik rajta, akadás nélkül
-3. markerre koppintva megnyílik egy részletpanel
-4. a sugárkör (`Circle`) rajzolódik
-5. sötét módban a térkép is sötét
+1. megjelenik az OSM térkép, kulcs nélkül, és látszik az attribúció
+2. a felhasználó helyzete a helyes ponton van (vetítés ellenőrizve)
+3. legalább 20 saját, színes marker látszik, görgetés közben akadás nélkül
+4. markerre koppintva megnyílik egy részletpanel
+5. a sugárkör rajzolódik (`Buffer()` poligon)
+6. sötét módban a térkép is elfogadhatóan néz ki
 
 Ha bármelyik pont nem megy ésszerű időn belül, **itt állunk meg és újra döntünk**
-(Mapsui vagy Maui.GoogleMaps) — nem a 3. fázis közepén, 11 oldal megírása után.
+— nem a 3. fázis közepén, 11 oldal megírása után. A tartalék irány egy WebView +
+MapLibre réteg, ami HTML markereket használ.
 
 ---
 
@@ -399,30 +454,44 @@ Ha bármelyik pont nem megy ésszerű időn belül, **itt állunk meg és újra 
 
 | Fázis | Tartalom | Becslés |
 |---|---|---|
-| **0. Térkép spike** | Eldobható app, a 7.3 öt pontja iOS-en és Androidon | 3-4 nap |
+| **0. Térkép spike** | Eldobható app, a 7.5 hat pontja iOS-en és Androidon | 3-4 nap |
 | **1. Api + Shared** | Scaffold, 31 végpont, JWT, BCrypt, tranzakciók, rate limit | 1-1,5 hét |
 | **2. Maui váz** | Shell navigáció, Refit kliens, `AuthService`, téma, `OfferCardView` | 3-4 nap |
 | **3. Képernyők** | 11 oldal + ViewModelek | 2-3 hét |
-| **4. Kiadás** | Signing, App Store / Play Console, deploy a VPS-re | 3-4 nap |
+| **4. Kiadás** | Signing, App Store / Play Console, API deploy | 3-4 nap |
 | | **Összesen** | **5-7 hét** |
 
 A becslés egy főre, fókuszált munkára vonatkozik, és feltételezi, hogy a 0.
-fázis sikerül. Ha a platform handler útja elakad, a térképréteg +1-2 hét.
+fázis sikerül. Ha a térképréteg elakad, +1-2 hét.
+
+Az 1. fázis megkezdéséhez el kell dőlnie, hol fut majd az API — lásd alább.
 
 ---
 
 ## 9. Nyitott kérdések
 
-- **Google Maps API kulcs** — Androidhoz kell egy, a régi projektben van;
-  megosztjuk vagy újat kérünk?
-- **HTTPS a VPS-en** — ma az API `http://`-n megy. A MAUI app App Transport
-  Security miatt iOS-en HTTPS-t vár. Kell egy tanúsítvány (Let's Encrypt) és
-  egy domain az IP helyett. Ezt az 1. fázisban érdemes rendezni.
+- **Hol fut az API?** *(a legfontosabb, az 1. fázist blokkolja)* A jelenlegi
+  Hostinger shared hosting csomag hosszan futó .NET processzt nem tud
+  kiszolgálni. Lehetőségek:
+  1. **Hostinger VPS** — egy szolgáltatónál marad minden, Docker, nginx reverse
+     proxy 443 → 5000, Let's Encrypt. A DB maradhat, ahol van, csak a VPS
+     IP-jét kell engedélyezni a Remote MySQL beállításban.
+  2. **PaaS** (Railway, Fly.io, Azure App Service) — a HTTPS és a deploy
+     automatikus, de új szolgáltató, és az ingyenes szintek elalszanak.
+  3. **Egyelőre marad fejlesztői mód** — ha a projekt demó/vizsga célú, a
+     lokális API elég, és a döntést az éles indulásra halasztjuk.
+- **Csempeforrás éles üzemben** — lásd a 7.3 pontot; a fejlesztés OSM nyilvános
+  csempékkel indul, az éles döntés később.
 - **Párhuzamos üzem** — a régi RN app és az új MAUI app egy ideig ugyanazt az
   adatbázist használná. Mivel az API szerződés nem változik, ez működik, de a
-  két API-t (Node és .NET) külön porton kell futtatni az átállás alatt.
+  két API-t (Node és .NET) külön címen kell futtatni az átállás alatt.
 - **Migráció vagy párhuzamos fejlesztés** — leáll a régi projekt fejlesztése az
   átállás idejére, vagy megy tovább? Ha megy, a két kódbázis szétcsúszik.
+
+### Lezárt kérdések
+
+- ~~Google Maps API kulcs~~ — tárgytalan, a Mapsui nem használ Google-t (1.5)
+- ~~HTTPS és domain~~ — megvan, a Hostinger automatikusan kezeli (1.6)
 
 ---
 
@@ -430,3 +499,25 @@ fázis sikerül. Ha a platform handler útja elakad, a térképréteg +1-2 hét.
 
 **0. fázis: térkép spike.** Semmilyen üzleti logika nem íródik meg addig, amíg a
 saját marker nem működik mindkét platformon.
+
+Munkakönyvtár: `/Users/fustimolnarpatrick/vissza_maui`.
+A régi `Desktop/vissza` projekt innentől **csak olvasásra** szolgál referenciaként.
+
+---
+
+## 11. Módosítási napló
+
+### 2026-08-13
+
+- **Térkép: platform handler → Mapsui + OSM.** Kiderült, hogy a MAUI beépített
+  `Map` kontrollja Androidon Google Maps SDK-t használ, ami API kulcsot igényel.
+  Mivel a kulcsmentesség követelmény, a handler útja járhatatlan. A Mapsui
+  egyszerre teljesíti a kulcsmentességet és a saját markereket, kevesebb kóddal.
+  Érintett fejezetek: 1.5, 3, 3.1, 7, 8.
+- **Domain és HTTPS lezárva.** A `fustimolnarpatrick.com` Hostingeren fut,
+  automatikus Let's Encrypt tanúsítvánnyal. Új fejezet: 1.6.
+- **Üzemeltetési kép pontosítva.** Felmérés alapján a domain, az adatbázis és az
+  API három külön dolog, és az API sehol nem fut. Új fejezet: 2.1.
+- **Javítás az 1.2-ben.** A "nem spórol hostingot" indok ebben a setupban téves
+  volt, mert a Hostinger csomag adja a távoli MySQL-t. Az indok törölve, a
+  maradék három érv változatlan.
