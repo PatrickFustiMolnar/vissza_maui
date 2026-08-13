@@ -529,15 +529,42 @@ MapLibre réteg, ami HTML markereket használ.
 | 5 | Sugárkör | **OK** — NTS `Buffer()` poligon |
 | 6 | Sötét mód | **nem** — a fátyol nem rajzolódik |
 
-**A két hiányzó pont közös jellemzője:** mindkettő nagy felületű rajzolás (a
-raszter csempe és a világméretű fátyol-poligon), miközben a vektoros elemek
-(markerek, kör) hibátlanul mennek. A csempék **letöltése sikeres** — 25 HTTP
-kérés, mind `finished successfully` —, tehát nem hálózati gond, hanem rajzolás.
+**Frissítve 2026-08-13, tiszta toolchainen újramérve.** A workload set
+telepítése után a spike mankók nélkül fordul, és a kép megváltozott:
 
-Mivel a build nem támogatott Xcode-kombináción készült, kikapcsolt verzió-
-ellenőrzéssel és `MtouchLink=SdkOnly`-val, **egyelőre nem eldönthető, hogy
-Mapsui-hiba vagy a toolchain műterméke.** Ezért a következő lépés a toolchain
-rendbetétele, nem a Mapsui cseréje.
+| # | Kritérium | Állapot |
+|---|---|---|
+| 1 | OSM térkép kulcs nélkül, attribúcióval | **OK** — Budapest, a Duna, az utcanevek mind rajzolódnak |
+| 2 | Helyzet a helyes ponton | **OK** |
+| 3 | 20+ saját marker, akadás nélkül | **OK** |
+| 4 | Koppintás → részletpanel | **OK** |
+| 5 | Sugárkör | **OK** |
+| 6 | Sötét mód | **nyitva** — lásd alább |
+
+**Korábbi feltevésem téves volt.** Azt írtam, hogy a csempék hiánya
+valószínűleg a nem támogatott toolchain műterméke. Nem az: tiszta buildben
+is ugyanúgy viselkedik. A valódi ok szűkebb és jobban körülhatárolt.
+
+**A tényleges nyitott probléma: a programozott újrarajzolás nem működik.**
+
+A csempék letöltődnek és helyesen rajzolódnak — de csak az **első
+felhasználói gesztus után**. Friss indításnál a térkép üres marad (a
+markerek látszanak, mert azok már az első rajzoláskor megvannak).
+
+Sem a `MapControl.ForceUpdate()`, sem a `Refresh()`, sem a
+`Map.DataChanged` eseményre kötött frissítés nem érvényteleníti a Skia
+felületet iOS-en. Ugyanez az oka annak, hogy a sötét fátyol sem jelenik meg:
+a réteg bekapcsolása után szintén programozott újrarajzolás kellene.
+
+Ez **nem a Mapsui képességeinek hiánya**, hanem a MAUI és a SkiaSharp
+integrációjának egy részlete. Nem befolyásolja a Mapsui melletti döntést:
+gesztus után minden hibátlanul rajzolódik, beleértve a saját markereket, a
+sugárkört és a csempéket.
+
+**Megoldás a 3. fázisra**, a `CollectPage` megírásakor. Vizsgálandó irányok:
+GPU-alapú (`SKGLView`) megjelenítő a CPU-alapú helyett, a Mapsui hivatalos
+MAUI mintaprojektjének összevetése, és a Mapsui hibajegyeinek átnézése erre
+a tünetre.
 
 ---
 

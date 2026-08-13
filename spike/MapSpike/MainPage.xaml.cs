@@ -109,6 +109,18 @@ public partial class MainPage : ContentPage
 
         map.ViewportInitialized += CenterOnce;
 
+        // NYITOTT PROBLÉMA - lásd MAUI_TERV.md 7.6.
+        //
+        // A csempék aszinkron érkeznek, és a beérkezésük nem rajzolja újra a
+        // vásznat: a térkép üres marad az első felhasználói gesztusig. Ez a
+        // kezelő elvben a helyes horog, de ÖNMAGÁBAN NEM ELÉG - sem a
+        // ForceUpdate(), sem a Refresh() nem érvényteleníti a Skia felületet
+        // iOS-en. Ugyanez az oka, hogy a sötét fátyol sem jelenik meg.
+        //
+        // Nem Mapsui-képesség hiánya: gesztus után minden hibátlanul
+        // rajzolódik. A megoldás a 3. fázisra marad.
+        map.DataChanged += OnMapDataChanged;
+
         MapView.Map = map;
         MapView.Info += OnMapInfo;
 
@@ -215,6 +227,18 @@ public partial class MainPage : ContentPage
         };
 
         return new MemoryLayer("Sötétítés") { Features = new[] { feature } };
+    }
+
+    /// <summary>
+    /// A csempeletöltés háttérszálon fut, a rajzolás viszont csak a fő
+    /// szálon indítható - ezért a marshalling.
+    /// </summary>
+    void OnMapDataChanged(object? sender, EventArgs e)
+    {
+        if (MainThread.IsMainThread)
+            MapView.ForceUpdate();
+        else
+            MainThread.BeginInvokeOnMainThread(MapView.ForceUpdate);
     }
 
     // 4. kritérium: koppintás a markeren
