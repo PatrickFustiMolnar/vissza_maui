@@ -682,9 +682,6 @@ TransactionDetail, Rating, Settings, OfferDetail.
 
 Ami a fázison belül még hátravan:
 
-- **Fénykép a felajánláshoz.** A `MediaPicker` + feltöltés útja már él a
-  Beállításokban, tehát a Give-be átemelhető. A részletlap már ki is rajzolja
-  a képet, ha van - a demo adatban egyik felajánlásnak sincs.
 - **Elérhetőségi idősáv a Give-ben.** A részletlap megjeleníti, létrehozni
   még nem lehet.
 - **Chat: SignalR a lekérdezés helyett** (6.1).
@@ -697,6 +694,45 @@ A régi `Desktop/vissza` projekt innentől **csak olvasásra** szolgál referenc
 ---
 
 ## 11. Módosítási napló
+
+### 2026-08-14 — fénykép a felajánláshoz
+
+A Give űrlapja fotót kapott. A kép **azonnal feltöltődik**, nem a
+közzétételkor: így a felhasználó rögtön látja, mit választott, és a felajánlás
+létrehozása egyetlen gyors kérés marad.
+
+A választó és a feltöltés a **`PhotoService`-be** került, mert a profilkép
+ugyanezt az utat járja. Egy közös akciólap (Kamera / Galéria / Törlés), egy
+`PhotoResult`, és a Beállítások is erre állt át - eddig a saját másolatát
+használta.
+
+**Egy apróság, ami így derült ki:** a feltöltés **relatív** útvonalat ad
+vissza (`/uploads/kep.jpg`), és az abszolutizálás a szerver dolga olvasáskor.
+Az űrlap előnézetének viszont azonnal kell egy teljes URL, mielőtt bármi
+visszatérne a szerverről. Az API címe eddig csak a `MauiProgram`-ban volt meg;
+átkerült az **`ApiConfig`**-ba, ott van az `Absolute()` is.
+
+A képválasztás hibája (megtagadott jogosultság, kamera nélküli eszköz) saját
+kivételtípust kapott (`PhotoPickException`), hogy az `ApiErrors` a magyar
+mondatát adja vissza, ne a nyers `.NET` kivételszöveget.
+
+Végigmérve, élő adaton (utána visszaállítva):
+
+| Lépés | Eredmény |
+|---|---|
+| Fotó hozzáadása → Galéria → kép | feltöltve, előnézet a szerverről megjelent |
+| Közzététel | `photo_url = /uploads/file-…jpeg` a felajánláson |
+| Részletlap | a kép kirajzolódott |
+| Profilkép ugyanezen az úton | avatar lecserélődött |
+| Profilkép → Törlés | monogram jött vissza |
+
+Az `uploads/` mappa bekerült a `.gitignore`-ba: felhasználói adat, nem
+forráskód, és eddig csak azért nem lógott a státuszban, mert üres volt.
+
+**Ami hibának látszott, de nem az:** a "Szeged, Kossuth ter" címre a
+Nominatim üres találatot ad (ékezet nélkül nem ismeri fel), és az app
+helyesen kiírta, hogy nem sikerült a koordináta. A fotó közben megmaradt az
+űrlapon - egy elbukott közzététel nem dobja el a feltöltött képet.
 
 ### 2026-08-14 — OfferDetail: a 3. fázis képernyői megvannak
 

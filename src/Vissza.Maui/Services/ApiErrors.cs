@@ -14,6 +14,10 @@ public static class ApiErrors
     public static string Describe(Exception exception) => exception switch
     {
         ApiException api => FromApi(api),
+
+        // A saját üzenete már magyar, és a felhasználónak szól.
+        PhotoPickException => exception.Message,
+
         HttpRequestException => "Nem sikerült elérni a szervert. Ellenőrizd a hálózati kapcsolatot.",
         TaskCanceledException => "A kérés túllépte az időkorlátot.",
 

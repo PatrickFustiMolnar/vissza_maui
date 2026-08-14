@@ -53,6 +53,38 @@
 
                         <Entry Placeholder="Megjegyzés" Text="{Binding Notes}" />
 
+                        <!--
+                            Fotó. A kép azonnal feltöltődik, ezért az előnézet
+                            már a szerverről jön - amit itt látsz, az kerül a
+                            felajánlásra.
+                        -->
+                        <Label Text="Fotó (nem kötelező)" Style="{StaticResource SecondaryLabel}" />
+
+                        <Border IsVisible="{Binding HasPhoto}"
+                                StrokeThickness="0"
+                                Padding="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8" />
+                            </Border.StrokeShape>
+                            <Image Source="{Binding PhotoPreview}"
+                                   Aspect="AspectFill"
+                                   HeightRequest="160" />
+                        </Border>
+
+                        <Button Text="Fotó hozzáadása"
+                                Command="{Binding ChangePhotoCommand}"
+                                IsVisible="{Binding HasPhoto, Converter={StaticResource Not}}"
+                                IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceMutedLight}, Dark={StaticResource SurfaceMutedDark}}"
+                                TextColor="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}" />
+
+                        <Button Text="Fotó cseréje vagy törlése"
+                                Command="{Binding ChangePhotoCommand}"
+                                IsVisible="{Binding HasPhoto}"
+                                IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceMutedLight}, Dark={StaticResource SurfaceMutedDark}}"
+                                TextColor="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}" />
+
                         <Button Text="Közzététel"
                                 Command="{Binding SubmitCommand}"
                                 IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />

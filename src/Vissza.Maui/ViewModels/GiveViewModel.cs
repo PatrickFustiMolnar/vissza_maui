@@ -15,7 +15,8 @@ namespace Vissza.Maui.ViewModels;
 public sealed partial class GiveViewModel(
     IServiceProvider services,
     AuthService auth,
-    GeocodingService geocoding) : ViewModelBase
+    GeocodingService geocoding,
+    PhotoService photos) : ViewModelBase
 {
     IVisszaApi Api => services.GetRequiredService<IVisszaApi>();
 
@@ -69,6 +70,28 @@ public sealed partial class GiveViewModel(
     [ObservableProperty]
     public partial string Notes { get; set; } = string.Empty;
 
+    /// <summary>
+    /// A feltöltött fotó relatív útvonala. Ezt küldjük az API-nak; a képernyő
+    /// előnézete a PhotoPreview teljes URL-jét használja.
+    /// </summary>
+    [ObservableProperty]
+    public partial string? PhotoPath { get; set; }
+
+    public bool HasPhoto => !string.IsNullOrWhiteSpace(PhotoPath);
+
+    /// <summary>
+    /// A feltöltés relatív útvonalat ad vissza; a felajánlás létrehozásáig
+    /// nincs szerveroldali kör, ami teljes URL-lé alakítaná - ezért itt
+    /// alakítjuk.
+    /// </summary>
+    public string? PhotoPreview => ApiConfig.Absolute(PhotoPath);
+
+    partial void OnPhotoPathChanged(string? value)
+    {
+        OnPropertyChanged(nameof(HasPhoto));
+        OnPropertyChanged(nameof(PhotoPreview));
+    }
+
     [ObservableProperty]
     public partial OfferDto? ExpandedOffer { get; set; }
 
@@ -96,6 +119,27 @@ public sealed partial class GiveViewModel(
     {
         IsFormVisible = !IsFormVisible;
         ErrorMessage = null;
+    }
+
+    /// <summary>
+    /// A fotó azonnal feltöltődik, nem a közzétételkor. Így a felhasználó
+    /// rögtön látja, mit választott, és a felajánlás létrehozása egyetlen
+    /// gyors kérés marad.
+    /// </summary>
+    [RelayCommand]
+    async Task ChangePhotoAsync()
+    {
+        await RunAsync(async () =>
+        {
+            var result = await photos.ChooseAsync("Fotó a felajánláshoz", allowRemove: HasPhoto);
+
+            PhotoPath = result.Choice switch
+            {
+                PhotoChoice.Uploaded => result.Path,
+                PhotoChoice.Removed => null,
+                _ => PhotoPath
+            };
+        });
     }
 
     /// <summary>
@@ -144,6 +188,7 @@ public sealed partial class GiveViewModel(
             LocationLat = (decimal)position.Lat,
             LocationLng = (decimal)position.Lng,
             Notes = string.IsNullOrWhiteSpace(Notes) ? null : Notes.Trim(),
+            PhotoUrl = PhotoPath,
             Status = OfferStatus.Active
         };
 
@@ -164,6 +209,7 @@ public sealed partial class GiveViewModel(
         OtherDescription = string.Empty;
         Address = string.Empty;
         Notes = string.Empty;
+        PhotoPath = null;
     }
 
     [RelayCommand]

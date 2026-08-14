@@ -16,7 +16,8 @@ namespace Vissza.Maui.ViewModels;
 public sealed partial class SettingsViewModel(
     IServiceProvider services,
     AuthService auth,
-    GeocodingService geocoding) : ViewModelBase
+    GeocodingService geocoding,
+    PhotoService photos) : ViewModelBase
 {
     IVisszaApi Api => services.GetRequiredService<IVisszaApi>();
 
@@ -261,74 +262,27 @@ public sealed partial class SettingsViewModel(
     // --- profilkép ---
 
     /// <summary>
-    /// Kép választása a galériából, feltöltés, majd a profil frissítése.
-    /// A kamerát a régi app is felkínálta; itt a MediaPicker mindkettőt tudja,
-    /// de a jogosultsági kérdés kevesebb, ha egy forrásból indulunk - a
-    /// képernyőn ez így is elég.
+    /// Kép választása, feltöltés, majd a profil frissítése. A választót és a
+    /// feltöltést a PhotoService intézi - ugyanaz az út, mint a felajánlás
+    /// fotójánál.
     /// </summary>
     [RelayCommand]
     async Task ChangePhotoAsync()
     {
-        var action = HasProfileImage
-            ? await Shell.Current.DisplayActionSheetAsync("Profilkép", "Mégsem", "Törlés", "Kamera", "Galéria")
-            : await Shell.Current.DisplayActionSheetAsync("Profilkép", "Mégsem", null, "Kamera", "Galéria");
-
-        switch (action)
-        {
-            case "Törlés":
-                // A PUT /api/auth/me nem tud null-t: a null azt jelenti,
-                // "ne módosítsd". Üres sztringgel töröljük - ezt a szerver
-                // is így értelmezi.
-                await RunAsync(async () =>
-                {
-                    var user = await Api.UpdateMeAsync(new UpdateProfileRequest { ProfileImage = string.Empty });
-
-                    auth.UpdateCurrentUser(user);
-                    Fill(user);
-                });
-                break;
-
-            case "Kamera":
-                await UploadAsync(() => MediaPicker.Default.CapturePhotoAsync());
-                break;
-
-            case "Galéria":
-                // Csak a többes választás nem elavult; egyre korlátozzuk, és
-                // az elsőt vesszük.
-                await UploadAsync(async () =>
-                    (await MediaPicker.Default.PickPhotosAsync(new MediaPickerOptions { SelectionLimit = 1 }))
-                        .FirstOrDefault());
-                break;
-        }
-    }
-
-    async Task UploadAsync(Func<Task<FileResult?>> pick)
-    {
-        FileResult? file;
-
-        try
-        {
-            file = await pick();
-        }
-        catch (Exception ex)
-        {
-            // Megtagadott jogosultság vagy nem támogatott eszköz. A választás
-            // megszakítása viszont nem kivétel, hanem null.
-            ErrorMessage = $"A kép kiválasztása nem sikerült: {ex.Message}";
-            return;
-        }
-
-        if (file is null)
-            return;
-
         await RunAsync(async () =>
         {
-            await using var stream = await file.OpenReadAsync();
+            var result = await photos.ChooseAsync("Profilkép", allowRemove: HasProfileImage);
 
-            var upload = await Api.UploadAsync(
-                new Refit.StreamPart(stream, file.FileName, file.ContentType ?? "image/jpeg"));
+            if (result.Choice == PhotoChoice.Cancelled)
+                return;
 
-            var user = await Api.UpdateMeAsync(new UpdateProfileRequest { ProfileImage = upload.Url });
+            // A PUT /api/auth/me nem tud null-t: a null azt jelenti, "ne
+            // módosítsd". Törléshez üres sztring megy - a szerver is így
+            // értelmezi.
+            var user = await Api.UpdateMeAsync(new UpdateProfileRequest
+            {
+                ProfileImage = result.Path ?? string.Empty
+            });
 
             auth.UpdateCurrentUser(user);
             Fill(user);

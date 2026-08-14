@@ -9,17 +9,6 @@ namespace Vissza.Maui;
 
 public static class MauiProgram
 {
-    /// <summary>
-    /// Az API címe fejlesztéskor. Az Android emulátor saját hálózaton fut,
-    /// onnan a gazdagép a 10.0.2.2 címen érhető el - az iOS szimulátor
-    /// viszont a gazdagép hálózatát használja.
-    ///
-    /// Élesben ide az api.fustimolnarpatrick.com kerül majd, HTTPS-en.
-    /// </summary>
-    static string ApiBaseUrl => DeviceInfo.Platform == DevicePlatform.Android
-        ? "http://10.0.2.2:5199"
-        : "http://localhost:5199";
-
     public static MauiApp CreateMauiApp()
     {
         var builder = MauiApp.CreateBuilder();
@@ -46,7 +35,7 @@ public static class MauiProgram
             })
             .ConfigureHttpClient(client =>
             {
-                client.BaseAddress = new Uri(ApiBaseUrl);
+                client.BaseAddress = new Uri(ApiConfig.BaseUrl);
                 client.Timeout = TimeSpan.FromSeconds(30);
             })
             .AddHttpMessageHandler<AuthTokenHandler>();
@@ -64,6 +53,7 @@ public static class MauiProgram
         builder.Services.AddTransient<SettingsViewModel>();
         builder.Services.AddTransient<OfferDetailViewModel>();
         builder.Services.AddSingleton<GeocodingService>();
+        builder.Services.AddSingleton<PhotoService>();
 
 #if DEBUG
         builder.Logging.AddDebug();
