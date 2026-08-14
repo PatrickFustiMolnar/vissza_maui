@@ -159,6 +159,18 @@ public sealed partial class TransactionDetailViewModel(
             TransactionId, new UpdateTransactionRequest { Status = TransactionStatus.Cancelled }));
     }
 
+    /// <summary>Értékelni csak lezárt átvétel után lehet.</summary>
+    [RelayCommand]
+    async Task RateAsync()
+    {
+        if (!IsCompleted || PartnerId == 0)
+            return;
+
+        await Shell.Current.GoToAsync(
+            $"rating?transactionId={TransactionId}&ratedId={PartnerId}"
+            + $"&ratedName={Uri.EscapeDataString(PartnerName)}");
+    }
+
     [RelayCommand]
     async Task OpenChatAsync()
     {

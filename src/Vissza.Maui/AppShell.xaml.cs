@@ -14,6 +14,7 @@ public partial class AppShell : Shell
         // külön regisztrált útvonal.
         Routing.RegisterRoute("chat", typeof(Pages.ChatPage));
         Routing.RegisterRoute("transaction", typeof(Pages.TransactionDetailPage));
+        Routing.RegisterRoute("rating", typeof(Pages.RatingPage));
     }
 
     /// <summary>

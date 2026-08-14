@@ -12,6 +12,7 @@
 
             <converters:InvertedBoolConverter x:Key="Not" />
             <converters:NotNullConverter x:Key="NotNull" />
+            <converters:StarColorConverter x:Key="StarColor" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

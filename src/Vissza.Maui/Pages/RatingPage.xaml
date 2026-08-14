@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Vissza.Maui.ViewModels"
+             x:Class="Vissza.Maui.Pages.RatingPage"
+             x:DataType="vm:RatingViewModel"
+             Title="Értékelés">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="20">
+
+            <Label Text="{Binding RatedName, StringFormat='Milyen volt {0}?'}"
+                   FontSize="{StaticResource FontSizeSubtitle}"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   Margin="0,16,0,0" />
+
+            <!--
+                Csillagsor. Öt külön Label, mert így a koppintás pontosan
+                arra a csillagra esik, amit a felhasználó lát - egy csúszkával
+                ez nem lenne egyértelmű.
+            -->
+            <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
+                <Label Text="★" FontSize="44" TextColor="{Binding Star1, Converter={StaticResource StarColor}}">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding SetStarsCommand}" CommandParameter="1" />
+                    </Label.GestureRecognizers>
+                </Label>
+                <Label Text="★" FontSize="44" TextColor="{Binding Star2, Converter={StaticResource StarColor}}">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding SetStarsCommand}" CommandParameter="2" />
+                    </Label.GestureRecognizers>
+                </Label>
+                <Label Text="★" FontSize="44" TextColor="{Binding Star3, Converter={StaticResource StarColor}}">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding SetStarsCommand}" CommandParameter="3" />
+                    </Label.GestureRecognizers>
+                </Label>
+                <Label Text="★" FontSize="44" TextColor="{Binding Star4, Converter={StaticResource StarColor}}">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding SetStarsCommand}" CommandParameter="4" />
+                    </Label.GestureRecognizers>
+                </Label>
+                <Label Text="★" FontSize="44" TextColor="{Binding Star5, Converter={StaticResource StarColor}}">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding SetStarsCommand}" CommandParameter="5" />
+                    </Label.GestureRecognizers>
+                </Label>
+            </HorizontalStackLayout>
+
+            <Editor Placeholder="Megjegyzés (nem kötelező)"
+                    Text="{Binding Comment}"
+                    HeightRequest="120"
+                    TextColor="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}"
+                    PlaceholderColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}" />
+
+            <Label Text="{Binding ErrorMessage}"
+                   IsVisible="{Binding HasError}"
+                   TextColor="{AppThemeBinding Light={StaticResource ErrorLight}, Dark={StaticResource ErrorDark}}"
+                   FontSize="{StaticResource FontSizeCaption}" />
+
+            <Button Text="{Binding SubmitText}"
+                    Command="{Binding SubmitCommand}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
+
+            <Button Text="Értékelés törlése"
+                    Command="{Binding DeleteCommand}"
+                    IsVisible="{Binding IsEditing}"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource ErrorLight}, Dark={StaticResource ErrorDark}}" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

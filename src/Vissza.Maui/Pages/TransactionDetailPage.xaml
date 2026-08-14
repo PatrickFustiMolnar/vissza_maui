@@ -57,6 +57,10 @@
                     Command="{Binding CompleteCommand}"
                     IsVisible="{Binding CanComplete}" />
 
+            <Button Text="Partner értékelése"
+                    Command="{Binding RateCommand}"
+                    IsVisible="{Binding IsCompleted}" />
+
             <Button Text="Átvétel visszavonása"
                     Command="{Binding CancelCommand}"
                     IsVisible="{Binding CanCancel}"
