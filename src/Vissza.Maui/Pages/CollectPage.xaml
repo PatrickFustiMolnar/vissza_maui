@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:Vissza.Maui.Controls"
+             xmlns:dtos="clr-namespace:Vissza.Shared.Dtos;assembly=Vissza.Shared"
+             xmlns:vm="clr-namespace:Vissza.Maui.ViewModels"
+             x:Class="Vissza.Maui.Pages.CollectPage"
+             x:DataType="vm:CollectViewModel"
+             Title="Gyűjtés">
+
+    <Grid RowDefinitions="200,Auto,*">
+
+        <controls:VisszaMapView x:Name="MapView" />
+
+        <!-- Szűrők -->
+        <Border Grid.Row="1" Style="{StaticResource CardBorder}" Margin="12,8" Padding="12">
+            <VerticalStackLayout Spacing="8">
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <Picker ItemsSource="{Binding BottleTypeOptions}"
+                            SelectedIndex="{Binding SelectedBottleTypeIndex}" />
+                    <Picker Grid.Column="1"
+                            ItemsSource="{Binding SortOptions}"
+                            SelectedIndex="{Binding SelectedSortIndex}" />
+                </Grid>
+
+                <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="8">
+                    <Entry Placeholder="Min. db" Text="{Binding MinQuantity}" Keyboard="Numeric" />
+                    <Entry Grid.Column="1" Placeholder="Max. km" Text="{Binding MaxDistanceKm}" Keyboard="Numeric" />
+                    <Button Grid.Column="2"
+                            Text="Szűrés"
+                            Command="{Binding ApplyFiltersCommand}"
+                            Padding="14,8"
+                            FontSize="{StaticResource FontSizeBody}" />
+                </Grid>
+
+                <Label Text="{Binding ErrorMessage}"
+                       IsVisible="{Binding HasError}"
+                       TextColor="{AppThemeBinding Light={StaticResource ErrorLight}, Dark={StaticResource ErrorDark}}"
+                       FontSize="{StaticResource FontSizeCaption}" />
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- Találatok -->
+        <RefreshView Grid.Row="2" IsRefreshing="{Binding IsBusy}" Command="{Binding LoadCommand}">
+            <CollectionView ItemsSource="{Binding Offers}">
+
+                <CollectionView.EmptyView>
+                    <Label Text="Nincs a szűrőknek megfelelő felajánlás."
+                           Margin="16"
+                           HorizontalOptions="Center"
+                           Style="{StaticResource SecondaryLabel}" />
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="dtos:OfferDto">
+                        <controls:OfferCardView Offer="{Binding .}"
+                                                TapCommand="{Binding BindingContext.SelectCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}}" />
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+            </CollectionView>
+        </RefreshView>
+
+        <!-- Jelentkezés a kiválasztott felajánlásra -->
+        <Border Grid.RowSpan="3"
+                Style="{StaticResource CardBorder}"
+                IsVisible="{Binding HasSelection}"
+                Margin="16"
+                VerticalOptions="Center">
+            <VerticalStackLayout Spacing="12">
+                <Label Text="Érdekel ez a felajánlás" FontAttributes="Bold"
+                       FontSize="{StaticResource FontSizeSubtitle}" />
+
+                <Label Text="{Binding SelectedOffer.Address}" Style="{StaticResource SecondaryLabel}" />
+
+                <Entry Placeholder="Üzenet a felajánlónak (nem kötelező)"
+                       Text="{Binding RequestMessage}" />
+
+                <Label Text="{Binding ErrorMessage}"
+                       IsVisible="{Binding HasError}"
+                       TextColor="{AppThemeBinding Light={StaticResource ErrorLight}, Dark={StaticResource ErrorDark}}"
+                       FontSize="{StaticResource FontSizeCaption}" />
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <Button Text="Mégsem"
+                            Command="{Binding CancelSelectionCommand}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceMutedLight}, Dark={StaticResource SurfaceMutedDark}}"
+                            TextColor="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}" />
+                    <Button Grid.Column="1"
+                            Text="Érdeklődés küldése"
+                            Command="{Binding SendRequestCommand}"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
+                </Grid>
+            </VerticalStackLayout>
+        </Border>
+
+    </Grid>
+
+</ContentPage>

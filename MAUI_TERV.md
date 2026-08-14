@@ -344,17 +344,19 @@ objektumhoz pedig hozzá sem nyúl.
 |---|---|---|
 | `bottleType` | elküldve, az API figyelmen kívül hagyta | **működik** (`bottle_type`) |
 | `minQuantity` | elküldve, az API figyelmen kívül hagyta | **működik** (`min_quantity`) |
-| `maxDistance` | el sem küldve, kliensoldalon sem alkalmazva | továbbra sem hat |
-| `sortBy` | el sem küldve, kliensoldalon sem alkalmazva | továbbra sem hat |
+| `maxDistance` | el sem küldve, kliensoldalon sem alkalmazva | **működik** (kliensoldali Haversine) |
+| `sortBy` | el sem küldve, kliensoldalon sem alkalmazva | **működik** (távolság / mennyiség / legújabb) |
 
 Az első kettő tisztán szerveroldali volt, ezért megcsináltuk: a meglévő RN
 kliens változtatás nélkül működni fog tőlük.
 
-A másik kettőhöz kliensoldali munka is kell — a távolsághoz és a távolság
-szerinti rendezéshez a felhasználó pozíciója szükséges, ami a kliensnél van.
-Ezek a **3. fázisba** tartoznak, a `CollectPage` megírásakor. A `sortBy`
-"quantity" és "newest" ága szerveroldalon is menne, de a háromból kettőt
-kliensen, egyet szerveren rendezni rosszabb, mint mindhármat egy helyen.
+A másik kettő a `CollectPage` megírásakor készült el, kliensoldalon: a
+távolsághoz a felhasználó pozíciója kell, ami a készüléken van, és nem is
+küldjük el a szervernek. Mindhárom rendezés egy helyen fut, hogy a sorrend
+ne két rétegből álljon össze.
+
+Helymeghatározás nélkül a távolságszűrő kimarad, a "Távolság" rendezés pedig
+a legújabbra esik vissza — hamis kilométereket mutatni rosszabb, mint semmit.
 
 **3. Az értékelő e-mail címe kiszivárgott.** *(javítva)*
 

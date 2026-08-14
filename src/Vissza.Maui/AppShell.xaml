@@ -25,6 +25,9 @@
         <ShellContent Route="dashboard"
                       Title="Térkép"
                       ContentTemplate="{DataTemplate pages:DashboardPage}" />
+        <ShellContent Route="collect"
+                      Title="Gyűjtés"
+                      ContentTemplate="{DataTemplate pages:CollectPage}" />
         <ShellContent Route="give"
                       Title="Felajánlás"
                       ContentTemplate="{DataTemplate pages:GivePage}" />
