@@ -50,7 +50,7 @@
                     IsVisible="{Binding CanConfirm}" />
 
             <Label Text="Megerősítetted. A lezáráshoz a másik fél megerősítése is kell."
-                   IsVisible="{Binding IConfirmed}"
+                   IsVisible="{Binding IsWaitingForPartner}"
                    Style="{StaticResource SecondaryLabel}" />
 
             <Button Text="Átvétel lezárása"

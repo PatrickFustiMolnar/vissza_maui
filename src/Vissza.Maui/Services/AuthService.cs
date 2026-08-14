@@ -22,6 +22,19 @@ public sealed class AuthService(IServiceProvider services)
 
     public UserDto? CurrentUser { get; private set; }
 
+    /// <summary>
+    /// A bejelentkezett felhasználó cseréje. Minden út ezen megy át, mert a
+    /// témát is itt kell érvényesíteni: a Shell életciklusára kötve nem
+    /// megbízható, a bejelentkezéskori beállítás kimaradt.
+    /// </summary>
+    void SetUser(UserDto? user)
+    {
+        CurrentUser = user;
+
+        ThemeService.Apply(user);
+        AuthStateChanged?.Invoke(this, EventArgs.Empty);
+    }
+
     public bool IsSignedIn => CurrentUser is not null;
 
     /// <summary>Az AuthTokenHandler kérdezi le minden kimenő kéréshez.</summary>
@@ -43,8 +56,7 @@ public sealed class AuthService(IServiceProvider services)
             if (string.IsNullOrEmpty(_token))
                 return false;
 
-            CurrentUser = await Api.GetMeAsync();
-            AuthStateChanged?.Invoke(this, EventArgs.Empty);
+            SetUser(await Api.GetMeAsync());
 
             return true;
         }
@@ -76,27 +88,21 @@ public sealed class AuthService(IServiceProvider services)
     public async Task SignOutAsync()
     {
         _token = null;
-        CurrentUser = null;
 
         SecureStorage.Default.Remove(TokenKey);
-        AuthStateChanged?.Invoke(this, EventArgs.Empty);
+        SetUser(null);
 
         await Task.CompletedTask;
     }
 
     /// <summary>A profil frissítése után az eltárolt felhasználót is frissítjük.</summary>
-    public void UpdateCurrentUser(UserDto user)
-    {
-        CurrentUser = user;
-        AuthStateChanged?.Invoke(this, EventArgs.Empty);
-    }
+    public void UpdateCurrentUser(UserDto user) => SetUser(user);
 
     async Task StoreAsync(AuthResponse response)
     {
         _token = response.Token;
-        CurrentUser = response.User;
 
         await SecureStorage.Default.SetAsync(TokenKey, response.Token);
-        AuthStateChanged?.Invoke(this, EventArgs.Empty);
+        SetUser(response.User);
     }
 }

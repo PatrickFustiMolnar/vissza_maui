@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- A SecureStorage a kulcstartót használja, ahhoz pedig iOS-en (a
+	     szimulátoron is) kell ez a jogosultság. Enélkül a token mentése
+	     csendben elbukik, és az app minden indításkor a bejelentkező
+	     képernyőn kezd. -->
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)hu.fustimolnarpatrick.vissza</string>
+	</array>
+</dict>
+</plist>

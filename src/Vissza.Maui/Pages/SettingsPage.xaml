@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Vissza.Maui.ViewModels"
+             x:Class="Vissza.Maui.Pages.SettingsPage"
+             x:DataType="vm:SettingsViewModel"
+             Title="Beállítások">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="16">
+
+            <!-- Profilkártya: a kiemelt színen a fehér szöveg szándékos,
+                 mindkét témában ez a kontrasztos. -->
+            <Border BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}"
+                    StrokeThickness="0"
+                    Padding="20">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16" />
+                </Border.StrokeShape>
+
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16">
+
+                    <Border WidthRequest="64"
+                            HeightRequest="64"
+                            BackgroundColor="#33FFFFFF"
+                            StrokeThickness="0"
+                            VerticalOptions="Start">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="32" />
+                        </Border.StrokeShape>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ChangePhotoCommand}" />
+                        </Border.GestureRecognizers>
+
+                        <Grid>
+                            <Label Text="{Binding Initials}"
+                                   IsVisible="{Binding HasProfileImage, Converter={StaticResource Not}}"
+                                   FontSize="{StaticResource FontSizeHeading}"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource TextOnAccent}"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center" />
+
+                            <Image Source="{Binding ProfileImage}"
+                                   IsVisible="{Binding HasProfileImage}"
+                                   Aspect="AspectFill"
+                                   WidthRequest="64"
+                                   HeightRequest="64" />
+                        </Grid>
+                    </Border>
+
+                    <VerticalStackLayout Grid.Column="1" Spacing="2">
+                        <Label Text="{Binding Name}"
+                               FontSize="20"
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource TextOnAccent}" />
+
+                        <Label Text="{Binding Email}"
+                               FontSize="{StaticResource FontSizeBody}"
+                               TextColor="#E6FFFFFF" />
+
+                        <Label Text="{Binding RatingSummary, StringFormat='★ {0}'}"
+                               IsVisible="{Binding HasRating}"
+                               FontSize="{StaticResource FontSizeCaption}"
+                               TextColor="#E6FFFFFF"
+                               Margin="0,4,0,0" />
+
+                        <HorizontalStackLayout Spacing="16" Margin="0,6,0,0">
+                            <Label Text="{Binding DonationsText}"
+                                   FontSize="{StaticResource FontSizeCaption}"
+                                   TextColor="#E6FFFFFF" />
+                            <Label Text="{Binding CollectionsText}"
+                                   FontSize="{StaticResource FontSizeCaption}"
+                                   TextColor="#E6FFFFFF" />
+                        </HorizontalStackLayout>
+
+                        <Label Text="Koppints a képre a profilkép módosításához."
+                               FontSize="{StaticResource FontSizeCaption}"
+                               TextColor="#B3FFFFFF"
+                               Margin="0,6,0,0" />
+                    </VerticalStackLayout>
+
+                </Grid>
+            </Border>
+
+            <!-- Profil adatok -->
+            <Border Style="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Profil adatok"
+                           FontSize="{StaticResource FontSizeTitle}"
+                           FontAttributes="Bold" />
+
+                    <Label Text="Telefonszám" Style="{StaticResource SecondaryLabel}" />
+                    <Entry Placeholder="+36 XX XXX XXXX"
+                           Text="{Binding Phone}"
+                           Keyboard="Telephone" />
+
+                    <Label Text="Bemutatkozás" Style="{StaticResource SecondaryLabel}" />
+                    <Editor Placeholder="Írj pár szót magadról..."
+                            Text="{Binding Bio}"
+                            HeightRequest="90"
+                            TextColor="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}"
+                            PlaceholderColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}" />
+
+                    <Label Text="Szerepkör" Style="{StaticResource SecondaryLabel}" />
+                    <Picker ItemsSource="{Binding RoleOptions}"
+                            SelectedIndex="{Binding SelectedRoleIndex}" />
+
+                    <Label Text="Alapértelmezett cím" Style="{StaticResource SecondaryLabel}" />
+                    <Entry Placeholder="pl. Budapest, XIII. kerület"
+                           Text="{Binding DefaultAddress}" />
+                    <Label Text="A címből a koordinátákat automatikusan meghatározzuk."
+                           Style="{StaticResource SecondaryLabel}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Értesítések -->
+            <Border Style="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Értesítések"
+                           FontSize="{StaticResource FontSizeTitle}"
+                           FontAttributes="Bold" />
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Értesítések engedélyezése"
+                               FontSize="{StaticResource FontSizeSubtitle}"
+                               VerticalOptions="Center" />
+                        <Switch Grid.Column="1"
+                                IsToggled="{Binding NotificationsEnabled}"
+                                OnColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
+                    </Grid>
+
+                    <!-- A sugárnak csak bekapcsolt értesítés mellett van értelme. -->
+                    <VerticalStackLayout Spacing="8" IsVisible="{Binding NotificationsEnabled}">
+                        <Label Text="Értesítési sugár (km)" Style="{StaticResource SecondaryLabel}" />
+                        <Entry Placeholder="5"
+                               Text="{Binding NotificationRadius}"
+                               Keyboard="Numeric" />
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Megjelenés -->
+            <Border Style="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Megjelenés"
+                           FontSize="{StaticResource FontSizeTitle}"
+                           FontAttributes="Bold" />
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout>
+                            <Label Text="Sötét mód" FontSize="{StaticResource FontSizeSubtitle}" />
+                            <Label Text="Azonnal mentődik, nem kell a Mentés gomb."
+                                   Style="{StaticResource SecondaryLabel}" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1"
+                                IsToggled="{Binding DarkMode}"
+                                VerticalOptions="Center"
+                                OnColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Kapott értékelések -->
+            <Border Style="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="12">
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ToggleRatingsCommand}" />
+                        </Grid.GestureRecognizers>
+
+                        <Label Text="Értékelések"
+                               FontSize="{StaticResource FontSizeTitle}"
+                               FontAttributes="Bold" />
+
+                        <Label Grid.Column="1"
+                               Text="{Binding RatingSummary, StringFormat='★ {0}'}"
+                               IsVisible="{Binding HasRating}"
+                               VerticalOptions="Center"
+                               Style="{StaticResource SecondaryLabel}" />
+                    </Grid>
+
+                    <VerticalStackLayout IsVisible="{Binding ShowRatings}" Spacing="10">
+
+                        <Label Text="Még nincs értékelésed."
+                               IsVisible="{Binding HasNoRatings}"
+                               HorizontalOptions="Center"
+                               Style="{StaticResource SecondaryLabel}" />
+
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Ratings}" Spacing="10">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="vm:RatingItem">
+                                    <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceMutedLight}, Dark={StaticResource SurfaceMutedDark}}"
+                                            StrokeThickness="0"
+                                            Padding="12">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="8" />
+                                        </Border.StrokeShape>
+
+                                        <VerticalStackLayout Spacing="4">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <Label Text="{Binding RaterName}" FontAttributes="Bold" />
+
+                                                <HorizontalStackLayout Grid.Column="1" Spacing="1">
+                                                    <Label Text="★" TextColor="{Binding Star1, Converter={StaticResource StarColor}}" />
+                                                    <Label Text="★" TextColor="{Binding Star2, Converter={StaticResource StarColor}}" />
+                                                    <Label Text="★" TextColor="{Binding Star3, Converter={StaticResource StarColor}}" />
+                                                    <Label Text="★" TextColor="{Binding Star4, Converter={StaticResource StarColor}}" />
+                                                    <Label Text="★" TextColor="{Binding Star5, Converter={StaticResource StarColor}}" />
+                                                </HorizontalStackLayout>
+                                            </Grid>
+
+                                            <Label Text="{Binding Comment}"
+                                                   IsVisible="{Binding HasComment}"
+                                                   FontAttributes="Italic"
+                                                   Style="{StaticResource SecondaryLabel}" />
+
+                                            <Label Text="{Binding CreatedAtText}"
+                                                   Style="{StaticResource SecondaryLabel}" />
+                                        </VerticalStackLayout>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <Label Text="{Binding ErrorMessage}"
+                   IsVisible="{Binding HasError}"
+                   TextColor="{AppThemeBinding Light={StaticResource ErrorLight}, Dark={StaticResource ErrorDark}}"
+                   FontSize="{StaticResource FontSizeCaption}" />
+
+            <Button Text="Változtatások mentése"
+                    Command="{Binding SaveCommand}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
+
+            <Button Text="Kijelentkezés"
+                    Command="{Binding SignOutCommand}"
+                    BackgroundColor="Transparent"
+                    BorderWidth="1"
+                    BorderColor="{AppThemeBinding Light={StaticResource ErrorLight}, Dark={StaticResource ErrorDark}}"
+                    TextColor="{AppThemeBinding Light={StaticResource ErrorLight}, Dark={StaticResource ErrorDark}}" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+
+            <Label Text="ÜvegVissza v1.0.0"
+                   HorizontalOptions="Center"
+                   Margin="0,8,0,24"
+                   Style="{StaticResource SecondaryLabel}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

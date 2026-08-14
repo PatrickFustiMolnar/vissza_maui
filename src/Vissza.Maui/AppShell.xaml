@@ -10,8 +10,8 @@
         A GoToAsync("//login") és ("//home") vált közöttük, így a
         vissza gomb nem tud visszalépni a kijelentkezés mögé.
 
-        A 3. fázisban a "home" helyére TabBar kerül a Dashboard, Give,
-        Collect, Messages és Settings lapokkal.
+        A lapfül "Profil", nem "Beállítások": a képernyő nagyobb része a
+        profil, és a rövidebb szó fér ki öt lapfül mellett.
     -->
 
     <ShellContent Route="login"
@@ -34,6 +34,9 @@
         <ShellContent Route="give"
                       Title="Felajánlás"
                       ContentTemplate="{DataTemplate pages:GivePage}" />
+        <ShellContent Route="settings"
+                      Title="Profil"
+                      ContentTemplate="{DataTemplate pages:SettingsPage}" />
     </TabBar>
 
 </Shell>

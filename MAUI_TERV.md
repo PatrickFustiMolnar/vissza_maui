@@ -655,8 +655,21 @@ Az 1. fázis megkezdéséhez el kell dőlnie, hol fut majd az API — lásd alá
 
 ## 10. Következő lépés
 
-**0. fázis: térkép spike.** Semmilyen üzleti logika nem íródik meg addig, amíg a
-saját marker nem működik mindkét platformon.
+A 3. fázis (képernyők) 9 oldalnál tart, mind élő adaton végigjárva:
+
+| Kész | Hátra |
+|---|---|
+| Login, Register, Dashboard, Give, Collect, Conversations, Chat, TransactionDetail, Rating, Settings | **OfferDetail** |
+
+Az `OfferDetailScreen.js` (564 sor) az egyetlen hátralévő képernyő. Utána
+a fázison belüli maradékok:
+
+- **Fénykép a felajánláshoz.** A `MediaPicker` + feltöltés útja már él a
+  Beállításokban, tehát a Give-be átemelhető.
+- **Elérhetőségi idősáv a Give-ben.**
+- **Chat: SignalR a lekérdezés helyett** (6.1).
+
+Az API hosztolása továbbra is nyitott, de csak a 4. fázist blokkolja - lásd 9.
 
 Munkakönyvtár: `/Users/fustimolnarpatrick/vissza_maui`.
 A régi `Desktop/vissza` projekt innentől **csak olvasásra** szolgál referenciaként.
@@ -664,6 +677,93 @@ A régi `Desktop/vissza` projekt innentől **csak olvasásra** szolgál referenc
 ---
 
 ## 11. Módosítási napló
+
+### 2026-08-14 — Settings, és két néma hiba a bejelentkezés körül
+
+A **Beállítások** képernyő megvan, és vele együtt kiderült két hiba, ami
+eddig csendben ült a kódban.
+
+**A képernyő.** `SettingsPage` + `SettingsViewModel`, a `SettingsScreen.js`
+(926 sor) leképezése: profilkártya (monogram vagy kép, átlag, statisztika),
+profil adatok (telefon, bemutatkozás, szerepkör, alapértelmezett cím),
+értesítések (kapcsoló + sugár), megjelenés (sötét mód), kapott értékelések
+összecsukható listája, mentés, kijelentkezés.
+
+Két dolog szándékosan tér el a régitől:
+
+- **Nincs "Beszélgetések" gomb.** A régi appban a Beállítások volt az egyetlen
+  út a beszélgetésekhez; nálunk az Üzenetek külön lapfül, tehát ez csak
+  második, felesleges bejárat lenne.
+- **A geokódolás csak megváltozott címnél fut.** A Nominatim másodpercenként
+  egy kérést enged, és a régi koordináta változatlan cím mellett úgyis jó.
+  A régi app minden mentésnél újra lekérdezte.
+
+**1. hiba: a `dark_mode` mezőt tároltuk, de sosem alkalmaztuk.**
+
+Az oszlop megvolt, a kapcsoló mentett volna - de az `Application.UserAppTheme`
+sehol nem íródott, tehát az app végig a rendszertémát követte. Bejelentkezés
+után egy világos módra állított felhasználó is sötétben kapta az appot.
+
+Megoldás: `ThemeService.Apply(user)`, és az **`AuthService`-ből** hívva, egy
+`SetUser` metóduson keresztül, amin minden út átmegy (bejelentkezés,
+regisztráció, munkamenet-visszaállítás, profilmentés, kijelentkezés).
+Először a `Shell.OnAppearing`-ben iratkoztam fel az eseményre - lásd a 2.
+hibát, hogy miért nem működött.
+
+**2. hiba: a "maradj bejelentkezve" sosem működött.**
+
+Az app minden indításkor a bejelentkező képernyőn kezdett. Mérve, nem tippelve:
+egy ideiglenes `Console.WriteLine` próba kiírta, hogy
+
+```
+[PROBE] Shell.OnAppearing, checked=False, services=False
+```
+
+A `Shell.OnAppearing` tehát **lefut**, de ekkor a Shell Handlere még nincs
+kész, így a `Handler?.MauiContext?.Services` **null**. A kód pont ezen a
+soron lépett ki csendben:
+
+```csharp
+if (services?.GetService<AuthService>() is not { } auth)
+    return;   // <- itt fordult vissza, minden indításkor
+```
+
+Nem dobott kivételt, nem írt naplót, nem indult HTTP-kérés - ezért nem is
+tűnt fel. Megoldás: a szolgáltatást a már meglévő `ServiceHelper`-ből vesszük
+(ugyanaz a minta, amit a Shell `DataTemplate`-jei miatt már használunk).
+
+Ellenőrizve: a próba `token=VAN`-t írt, az app a Térképen indult, és a téma
+a felhasználó beállítására váltott.
+
+**Ehhez kellett az iOS entitlement is.** A `SecureStorage` a kulcstartót
+használja, ahhoz pedig `keychain-access-groups` jogosultság kell - a
+szimulátoron is. `Platforms/iOS/Entitlements.plist` + `CodesignEntitlements`
+a csproj-ban.
+
+**A képfeltöltés innentől él.** `MediaPicker` (kamera vagy galéria) →
+`POST /api/upload` → `PUT /api/auth/me`. A `NSPhotoLibraryUsageDescription`
+és `NSCameraUsageDescription` bekerült az `Info.plist`-be. A törléshez üres
+sztringet küldünk, mert a végponton a `null` azt jelenti: "ne módosítsd"
+(lásd 5.1).
+
+**Az értékelés körbejárása is megvolt** (élő adatbázison, utána
+visszaállítva): felajánlás → átvétel → mindkét fél megerősítése → lezárás →
+"Partner értékelése" → 4 csillag + megjegyzés → mentés. A partner átlaga
+újraszámolódott.
+
+Ebből egy adatészrevétel: a demo adatbázisban a `users.average_rating` és
+`total_ratings` **nincs alátámasztva `ratings` sorokkal** (Kovács Jánosnál
+4,50 / 12 érték áll nulla sor mellett). Az első valódi értékelés ezért a
+számított értékre írja felül. Nem hiba, de a Beállítások fejlécében látszik
+az eltérés a felsorolt sorokhoz képest.
+
+**Szimulátor-tanulság a teszteléshez:** a natív `UISwitch` **nem reagál**
+injektált koppintásra, csak húzásra (`touch_path` balról jobbra a kapcsolón).
+Ez nem alkalmazáshiba - percekig kereshető, ha nem tudni.
+
+**Javítva még:** a "Megerősítetted. A lezáráshoz a másik fél megerősítése is
+kell." mondat lezárás után is látszott. Új feltétel: `IsWaitingForPartner`
+(függőben + én megerősítettem + a partner még nem).
 
 ### 2026-08-14 — a bejelentkezés végigmegy
 

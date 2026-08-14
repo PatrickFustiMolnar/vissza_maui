@@ -52,6 +52,13 @@ public sealed partial class TransactionDetailViewModel(
     public bool CanConfirm => IsPending && !IConfirmed;
 
     /// <summary>
+    /// Megtettem a magamét, de a másik fél még nem. Csak ilyenkor van értelme
+    /// a várakozásról írni: lezárás után vagy a partner megerősítése után a
+    /// szöveg félrevezető lenne.
+    /// </summary>
+    public bool IsWaitingForPartner => IsPending && IConfirmed && !PartnerConfirmed;
+
+    /// <summary>
     /// Lezárni csak akkor lehet, ha mindkét fél megerősített. A szerver
     /// ugyanezt kikényszeríti - a gomb elrejtése csak azt előzi meg, hogy a
     /// felhasználó hibaüzenetbe fusson.
@@ -80,7 +87,7 @@ public sealed partial class TransactionDetailViewModel(
     [
         nameof(IsDonor), nameof(IsCollector), nameof(IsPending), nameof(IsCompleted),
         nameof(IConfirmed), nameof(PartnerConfirmed), nameof(CanConfirm),
-        nameof(CanComplete), nameof(CanCancel), nameof(StatusText),
+        nameof(IsWaitingForPartner), nameof(CanComplete), nameof(CanCancel), nameof(StatusText),
         nameof(ConfirmationText), nameof(SummaryText)
     ];
 

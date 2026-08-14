@@ -22,6 +22,11 @@ public partial class AppShell : Shell
     /// befecskendezéssel: azzal az egész HTTP-verem (Refit kliens,
     /// HttpClientFactory, handlerek) az ablak létrehozása közben épülne fel,
     /// ami iOS-en natív összeomlást okozott. Lásd MAUI_TERV.md.
+    ///
+    /// A szolgáltatásokat a ServiceHelperből vesszük, nem a Handlerből: ebben
+    /// a pillanatban a Shell Handlere még nincs kész, a MauiContext null. Ez
+    /// csendben ejtette a munkamenet visszaállítását - az app minden
+    /// indításkor a bejelentkező képernyőn kezdett.
     /// </summary>
     protected override async void OnAppearing()
     {
@@ -32,10 +37,7 @@ public partial class AppShell : Shell
 
         _sessionChecked = true;
 
-        var services = Handler?.MauiContext?.Services;
-
-        if (services?.GetService<AuthService>() is not { } auth)
-            return;
+        var auth = ServiceHelper.Get<AuthService>();
 
         if (await auth.RestoreSessionAsync())
             await GoToAsync("//home");

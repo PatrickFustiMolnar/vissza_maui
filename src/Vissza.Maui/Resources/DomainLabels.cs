@@ -27,6 +27,13 @@ public static class DomainLabels
         _ => "Egyéb"
     };
 
+    public static string UserRole(UserRole role) => role switch
+    {
+        Shared.Enums.UserRole.Donor => "Csak felajánló",
+        Shared.Enums.UserRole.Collector => "Csak gyűjtő",
+        _ => "Mindkettő"
+    };
+
     public static string OfferStatus(OfferStatus status) => status switch
     {
         Shared.Enums.OfferStatus.Active => "Aktív",

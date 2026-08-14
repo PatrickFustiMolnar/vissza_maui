@@ -51,6 +51,14 @@
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 	</PropertyGroup>
 
+	<!-- A SecureStorage a kulcstartót használja, ahhoz pedig kell a
+	     keychain-access-groups jogosultság - a szimulátoron is. Enélkül a
+	     token mentése csendben elbukik, és az app minden indításkor
+	     kijelentkezett állapotból indul. -->
+	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+		<CodesignEntitlements>Platforms/iOS/Entitlements.plist</CodesignEntitlements>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<!-- App Icon -->
 		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />

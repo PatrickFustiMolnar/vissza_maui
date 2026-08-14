@@ -61,6 +61,7 @@ public static class MauiProgram
         builder.Services.AddTransient<ChatViewModel>();
         builder.Services.AddTransient<TransactionDetailViewModel>();
         builder.Services.AddTransient<RatingViewModel>();
+        builder.Services.AddTransient<SettingsViewModel>();
         builder.Services.AddSingleton<GeocodingService>();
 
 #if DEBUG

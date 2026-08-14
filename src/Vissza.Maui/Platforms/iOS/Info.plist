@@ -28,6 +28,12 @@
 	</array>
 	<key>XSAppIconAssets</key>
 	<string>Assets.xcassets/appicon.appiconset</string>
+	<!-- A profilkép választásához. iOS ezeket a szövegeket szó szerint mutatja
+	     a jogosultsági kérdésben, ezért magyarul és konkrétan fogalmaznak. -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>A profilképed kiválasztásához férünk hozzá a fotóidhoz.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>A profilképed elkészítéséhez használjuk a kamerát.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<!-- Fejlesztéshez: a helyi gépen futó API http-n megy. Élesben az
