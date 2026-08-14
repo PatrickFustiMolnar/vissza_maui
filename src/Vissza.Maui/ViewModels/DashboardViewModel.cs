@@ -18,8 +18,15 @@ public sealed partial class DashboardViewModel(IServiceProvider services, AuthSe
     IReadOnlyList<OfferDto> _offers = [];
     IReadOnlyList<ReturnLocationDto> _locations = [];
 
+    /// <summary>
+    /// A szűrők panelje. A régi térképen is gomb mögött volt: a térképből
+    /// minden elvett képpont számít, és a két kapcsoló ritkán kell.
+    /// </summary>
     [ObservableProperty]
-    public partial string Greeting { get; set; } = string.Empty;
+    public partial bool ShowFilters { get; set; }
+
+    [RelayCommand]
+    void ToggleFilters() => ShowFilters = !ShowFilters;
 
     [ObservableProperty]
     public partial bool ShowOffers { get; set; } = true;
@@ -49,8 +56,6 @@ public sealed partial class DashboardViewModel(IServiceProvider services, AuthSe
     [RelayCommand]
     public async Task LoadAsync()
     {
-        Greeting = auth.CurrentUser is { } user ? $"Szia, {user.Name}!" : string.Empty;
-
         await RunAsync(async () =>
         {
             // Egyszerre indul a kettő: a régi képernyő is Promise.all-lal
@@ -173,8 +178,15 @@ public sealed partial class DashboardViewModel(IServiceProvider services, AuthSe
                 $"{offer.Address}\nFelajánló: {offer.DonorName}"
                 + $"\nBecsült érték: ~{DomainLabels.EstimatedValue(offer.Quantity):N0} Ft",
 
-            ReturnLocationDto location =>
-                $"{location.Address}\n{location.OpeningHours ?? "Nyitvatartás nincs megadva"}",
+            ReturnLocationDto location => string.Join('\n', new[]
+            {
+                location.Address,
+                DomainLabels.LocationType(location.Type),
+                DomainLabels.AcceptedTypes(location.AcceptedTypes) is { Length: > 0 } accepted
+                    ? $"Elfogad: {accepted}"
+                    : null,
+                location.OpeningHours ?? "Nyitvatartás nincs megadva"
+            }.Where(line => line is not null)),
 
             _ => pin.Subtitle ?? string.Empty
         };
@@ -198,10 +210,23 @@ public sealed partial class DashboardViewModel(IServiceProvider services, AuthSe
         await Shell.Current.GoToAsync($"offer?offerId={id}");
     }
 
+    /// <summary>
+    /// A térkép középre állítása a saját helyzetre. A régi appban külön gomb
+    /// volt rá; enélkül elnavigálás után nincs visszaút a saját környékre.
+    /// </summary>
     [RelayCommand]
-    async Task SignOutAsync()
+    async Task LocateAsync()
     {
-        await auth.SignOutAsync();
-        await Shell.Current.GoToAsync("//login");
+        // Kényszerített újramérés: a gomb éppen attól hasznos, hogy a
+        // felhasználó időközben elmozdult.
+        _userLocation = null;
+
+        await CenterOnUserAsync();
     }
+
+    [RelayCommand]
+    static Task OpenGiveAsync() => Shell.Current.GoToAsync("//home/give");
+
+    [RelayCommand]
+    static Task OpenCollectAsync() => Shell.Current.GoToAsync("//home/collect");
 }

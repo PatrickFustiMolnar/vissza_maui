@@ -1,19 +1,28 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:res="clr-namespace:Vissza.Maui.Resources"
              xmlns:vm="clr-namespace:Vissza.Maui.ViewModels"
              x:Class="Vissza.Maui.Pages.RatingPage"
              x:DataType="vm:RatingViewModel"
-             Title="Értékelés">
+             Title="{Binding HeaderText}">
 
     <ScrollView>
         <VerticalStackLayout Padding="24" Spacing="20">
+
+            <!-- Melyik átvételről van szó -->
+            <Border Style="{StaticResource CardBorder}" IsVisible="{Binding HasSummary}">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                    <Label Text="{x:Static res:Icons.Package}" Style="{StaticResource IconLabel}" />
+                    <Label Grid.Column="1" Text="{Binding SummaryText}" VerticalOptions="Center" />
+                </Grid>
+            </Border>
 
             <Label Text="{Binding RatedName, StringFormat='Milyen volt {0}?'}"
                    FontSize="{StaticResource FontSizeSubtitle}"
                    FontAttributes="Bold"
                    HorizontalOptions="Center"
-                   Margin="0,16,0,0" />
+                   Margin="0,8,0,0" />
 
             <!--
                 Csillagsor. Öt külön Label, mert így a koppintás pontosan

@@ -114,6 +114,22 @@ public sealed partial class SettingsViewModel(
     [ObservableProperty]
     public partial bool ShowRatings { get; set; }
 
+    // --- beszélgetések ---
+    //
+    // A régi appban a Beállítások volt az egyetlen út az üzenetekhez. Nálunk
+    // külön lapfül is van, de a bejárat itt is marad: az olvasatlan szám
+    // ezen a képernyőn is látszik, és a megszokás sem törik meg.
+
+    [ObservableProperty]
+    public partial int UnreadCount { get; set; }
+
+    public bool HasUnread => UnreadCount > 0;
+
+    partial void OnUnreadCountChanged(int value) => OnPropertyChanged(nameof(HasUnread));
+
+    [RelayCommand]
+    static Task OpenConversationsAsync() => Shell.Current.GoToAsync("//home/messages");
+
     public bool HasNoRatings => Ratings.Count == 0;
 
     [RelayCommand]
@@ -133,12 +149,17 @@ public sealed partial class SettingsViewModel(
             auth.UpdateCurrentUser(user);
             Fill(user);
 
-            var ratings = await Api.GetRatingsAsync(ratedId: user.Id);
+            var ratingsTask = Api.GetRatingsAsync(ratedId: user.Id);
+            var unreadTask = Api.GetUnreadCountAsync();
+
+            await Task.WhenAll(ratingsTask, unreadTask);
 
             Ratings.Clear();
 
-            foreach (var rating in ratings)
+            foreach (var rating in await ratingsTask)
                 Ratings.Add(new RatingItem(rating));
+
+            UnreadCount = (await unreadTask).Count;
 
             OnPropertyChanged(nameof(HasNoRatings));
         });

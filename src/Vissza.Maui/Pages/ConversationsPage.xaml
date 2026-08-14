@@ -1,20 +1,34 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:dtos="clr-namespace:Vissza.Shared.Dtos;assembly=Vissza.Shared"
+             xmlns:res="clr-namespace:Vissza.Maui.Resources"
              xmlns:vm="clr-namespace:Vissza.Maui.ViewModels"
              x:Class="Vissza.Maui.Pages.ConversationsPage"
              x:DataType="vm:ConversationsViewModel"
              Title="Üzenetek">
 
-    <Grid RowDefinitions="Auto,*">
+    <Grid RowDefinitions="Auto,Auto,*">
 
-        <Label Text="{Binding UnreadCount, StringFormat='{0} olvasatlan üzenet'}"
+        <!-- Kereső: névre és az utolsó üzenet szövegére is talál. -->
+        <Border Style="{StaticResource CardBorder}" Margin="16,12,16,0" Padding="12,4">
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                <Label Text="{x:Static res:Icons.Search}"
+                       Style="{StaticResource MutedIconLabel}"
+                       FontSize="18" />
+                <Entry Grid.Column="1"
+                       Placeholder="Keresés beszélgetések között…"
+                       Text="{Binding SearchQuery}"
+                       ClearButtonVisibility="WhileEditing" />
+            </Grid>
+        </Border>
+
+        <Label Grid.Row="1"
+               Text="{Binding UnreadCount, StringFormat='{0} olvasatlan üzenet'}"
                IsVisible="{Binding HasUnread}"
-               Margin="16,12"
+               Margin="16,10,16,0"
                TextColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
 
-        <RefreshView Grid.Row="1" IsRefreshing="{Binding IsBusy}" Command="{Binding LoadCommand}">
+        <RefreshView Grid.Row="2" IsRefreshing="{Binding IsBusy}" Command="{Binding LoadCommand}">
             <CollectionView ItemsSource="{Binding Conversations}">
 
                 <CollectionView.EmptyView>
@@ -25,35 +39,69 @@
                 </CollectionView.EmptyView>
 
                 <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="dtos:ConversationDto">
-                        <Border Style="{StaticResource CardBorder}" Margin="16,0,16,10">
+                    <DataTemplate x:DataType="vm:ConversationItem">
+                        <Border Style="{StaticResource CardBorder}" Margin="16,10,16,0">
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer
                                     Command="{Binding BindingContext.OpenCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}}"
                                     CommandParameter="{Binding .}" />
                             </Border.GestureRecognizers>
 
-                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
-                                <Label Text="{Binding Partner.Name}" FontAttributes="Bold" />
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
 
-                                <Border Grid.Column="1"
-                                        IsVisible="{Binding UnreadCount}"
+                                <!-- Avatar: kép, vagy monogram, ha nincs -->
+                                <Border WidthRequest="44"
+                                        HeightRequest="44"
                                         BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}"
                                         StrokeThickness="0"
-                                        Padding="8,2">
+                                        VerticalOptions="Center">
                                     <Border.StrokeShape>
-                                        <RoundRectangle CornerRadius="10" />
+                                        <RoundRectangle CornerRadius="22" />
                                     </Border.StrokeShape>
-                                    <Label Text="{Binding UnreadCount}"
-                                           TextColor="{StaticResource TextOnAccent}"
-                                           FontSize="{StaticResource FontSizeCaption}" />
+                                    <Grid>
+                                        <Label Text="{Binding Initials}"
+                                               IsVisible="{Binding HasPartnerImage, Converter={StaticResource Not}}"
+                                               FontAttributes="Bold"
+                                               TextColor="{StaticResource TextOnAccent}"
+                                               HorizontalOptions="Center"
+                                               VerticalOptions="Center" />
+                                        <Image Source="{Binding PartnerImage}"
+                                               IsVisible="{Binding HasPartnerImage}"
+                                               Aspect="AspectFill"
+                                               WidthRequest="44"
+                                               HeightRequest="44" />
+                                    </Grid>
                                 </Border>
 
-                                <Label Grid.Row="1" Grid.ColumnSpan="2"
-                                       Text="{Binding LastMessage.Content}"
-                                       LineBreakMode="TailTruncation"
-                                       MaxLines="1"
-                                       Style="{StaticResource SecondaryLabel}" />
+                                <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                    <Label Text="{Binding PartnerName}" FontAttributes="Bold" />
+                                    <Label Text="{Binding LastMessage}"
+                                           LineBreakMode="TailTruncation"
+                                           MaxLines="1"
+                                           Style="{StaticResource SecondaryLabel}" />
+                                </VerticalStackLayout>
+
+                                <VerticalStackLayout Grid.Column="2"
+                                                     Spacing="6"
+                                                     VerticalOptions="Center"
+                                                     HorizontalOptions="End">
+                                    <Label Text="{Binding TimeText}"
+                                           HorizontalOptions="End"
+                                           Style="{StaticResource SecondaryLabel}" />
+
+                                    <Border IsVisible="{Binding HasUnread}"
+                                            BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}"
+                                            StrokeThickness="0"
+                                            Padding="8,2"
+                                            HorizontalOptions="End">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="10" />
+                                        </Border.StrokeShape>
+                                        <Label Text="{Binding UnreadCount}"
+                                               TextColor="{StaticResource TextOnAccent}"
+                                               FontSize="{StaticResource FontSizeCaption}" />
+                                    </Border>
+                                </VerticalStackLayout>
                             </Grid>
                         </Border>
                     </DataTemplate>

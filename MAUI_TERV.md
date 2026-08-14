@@ -721,6 +721,57 @@ A régi `Desktop/vissza` projekt innentől **csak olvasásra** szolgál referenc
 
 ## 11. Módosítási napló
 
+### 2026-08-14 — teljes átnézés a régi apphoz képest
+
+Mielőtt a 4. fázisra léptünk volna, végigvetettük a felületet a régivel. Nem
+csak kozmetikai eltérések jöttek elő.
+
+**A súlyos: a gyűjtő nem érte el a saját átvételeit.** *(javítva)*
+
+A `TransactionDetail` csak a Felajánlás lapról nyílt, tehát kizárólag
+felajánlóként. Aki gyűjtőként elfogadott jelentkezést kapott, nem tudta
+megnyitni az átvételt: nem erősíthetett meg, nem zárhatott le, és **értékelni
+sem tudott**, mert az Értékelés csak onnan érhető el. A gyűjtői oldal a
+jelentkezés elküldése után egyszerűen megszakadt.
+
+A régiben ez a Gyűjtés képernyő "folyamatban" és "lezárt" nézete volt.
+Mindkettő megvan; a sorok a saját tranzakcióimat listázzák, és a
+`TransactionDetail`-t nyitják.
+
+**Nem volt ikonfont az appban.** *(javítva)* Ezért hatott csupasznak, és
+ezért nem volt lapfül-ikon sem. Most ugyanaz a Material Design Icons készlet
+megy, amit a régi app is használt, tehát az ikonok nem hasonlók, hanem
+azonosak. A kódpontok az `Icons.cs`-ben vannak, **nyolcjegyű `\U` escape-pel**:
+ez a készlet az alapsík fölött él, és a négyjegyű `\u` kettévágja a
+karaktert - doboz meg egy szemét betű jelenik meg helyette. Ez elsőre meg is
+történt.
+
+**A Térkép rendbe téve.** Lekerült róla az üdvözlés és a kijelentkezés (a
+régiben egyik sem volt ott; a név és a kijelentkezés a Beállításokban van).
+Helyettük a régi elrendezés: két gyorsgomb (Felajánlás, Gyűjtés), a szűrők
+gomb mögé kerültek, és van "hol vagyok" gomb.
+
+**Amit a régi app rosszul csinált, és nem másoltuk:** a Gyűjtés "Ft keresett"
+számlálója a tranzakció `amount` mezőjét adta össze - ilyen oszlop viszont
+nincs, tehát az a szám sosem volt helyes. Nálunk ugyanaz az 50 Ft/palack
+becslés megy, ami a kártyákon is.
+
+**A többi, amit pótoltunk:**
+
+| Hol | Mi |
+|---|---|
+| Lapfülek | ikonok, és a régi nevek/sorrend (Térkép, Felajánlás, Gyűjtés, Üzenetek, Beállítások) |
+| Gyűjtés | alcím, összesítő csempék (összegyűjtött / Ft / kg CO₂), címkék a szűrők fölé |
+| Beszélgetések | kereső, avatar monogrammal, időbélyeg |
+| Értékelés | melyik átvételről van szó, és a cím szerkesztéskor "Értékelés szerkesztése" |
+| Beállítások | alcím, és visszakerült a "Beszélgetések" bejárat olvasatlan jelvénnyel |
+| Felajánlás | alcím |
+| Térkép, visszaváltó panel | típus (Automata/Üzlet/Gyűjtőpont) és az elfogadott palacktípusok |
+
+**Amit tudatosan nem vettünk át:** a régi Gyűjtés lista/térkép váltóját (nálunk
+mindkettő látszik egyszerre), és a Gyűjtés keresőmezőjét - a szűrők ugyanazt a
+munkát végzik, és a régiben a kereső csak kliensoldali szövegszűrés volt.
+
 ### 2026-08-14 — élő beszélgetés SignalR-rel; a 3. fázis kész
 
 A régi app öt másodpercenként kérdezte a szervert, akkor is, ha semmi nem

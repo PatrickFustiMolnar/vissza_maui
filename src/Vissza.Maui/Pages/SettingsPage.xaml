@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:res="clr-namespace:Vissza.Maui.Resources"
              xmlns:vm="clr-namespace:Vissza.Maui.ViewModels"
              x:Class="Vissza.Maui.Pages.SettingsPage"
              x:DataType="vm:SettingsViewModel"
@@ -8,6 +9,9 @@
 
     <ScrollView>
         <VerticalStackLayout Padding="16" Spacing="16">
+
+            <Label Text="Fiókod és az alkalmazás testreszabása"
+                   Style="{StaticResource SecondaryLabel}" />
 
             <!-- Profilkártya: a kiemelt színen a fehér szöveg szándékos,
                  mindkét témában ez a kontrasztos. -->
@@ -80,6 +84,41 @@
                                Margin="0,6,0,0" />
                     </VerticalStackLayout>
 
+                </Grid>
+            </Border>
+
+            <!-- Beszélgetések: a régi appban ez volt az egyetlen bejárat -->
+            <Border Style="{StaticResource CardBorder}" Padding="16,12">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding OpenConversationsCommand}" />
+                </Border.GestureRecognizers>
+
+                <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="10">
+                    <Label Text="{x:Static res:Icons.Message}" Style="{StaticResource IconLabel}" />
+
+                    <Label Grid.Column="1"
+                           Text="Beszélgetések"
+                           FontAttributes="Bold"
+                           VerticalOptions="Center"
+                           TextColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
+
+                    <Border Grid.Column="2"
+                            IsVisible="{Binding HasUnread}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource ErrorLight}, Dark={StaticResource ErrorDark}}"
+                            StrokeThickness="0"
+                            Padding="8,2"
+                            VerticalOptions="Center">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="10" />
+                        </Border.StrokeShape>
+                        <Label Text="{Binding UnreadCount}"
+                               TextColor="{StaticResource TextOnAccent}"
+                               FontSize="{StaticResource FontSizeCaption}" />
+                    </Border>
+
+                    <Label Grid.Column="3"
+                           Text="{x:Static res:Icons.ChevronRight}"
+                           Style="{StaticResource MutedIconLabel}" />
                 </Grid>
             </Border>
 

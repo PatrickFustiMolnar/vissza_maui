@@ -10,7 +10,11 @@
 
     <Grid RowDefinitions="Auto,Auto,*">
 
-        <Grid ColumnDefinitions="*,Auto" Padding="16,12">
+        <Label Text="Add tovább a palackjaidat"
+               Margin="16,8,16,0"
+               Style="{StaticResource SecondaryLabel}" />
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Padding="16,8,16,12">
             <Picker ItemsSource="{Binding StatusOptions}"
                     SelectedIndex="{Binding SelectedStatusIndex}" />
             <Button Grid.Column="1"

@@ -44,7 +44,9 @@ public sealed partial class ConversationsViewModel(
     void OnHubMessage(object? sender, ChatMessageDto message) =>
         MainThread.BeginInvokeOnMainThread(async () => await LoadAsync());
 
-    public ObservableCollection<ConversationDto> Conversations { get; } = [];
+    IReadOnlyList<ConversationItem> _loaded = [];
+
+    public ObservableCollection<ConversationItem> Conversations { get; } = [];
 
     [ObservableProperty]
     public partial int UnreadCount { get; set; }
@@ -52,6 +54,30 @@ public sealed partial class ConversationsViewModel(
     public bool HasUnread => UnreadCount > 0;
 
     partial void OnUnreadCountChanged(int value) => OnPropertyChanged(nameof(HasUnread));
+
+    /// <summary>
+    /// Keresés a listában. Kliensoldalon szűr: a beszélgetések száma
+    /// nagyságrendekkel kisebb, mint amiért érdemes lenne a szervert
+    /// megkérdezni minden leütésnél.
+    /// </summary>
+    [ObservableProperty]
+    public partial string SearchQuery { get; set; } = string.Empty;
+
+    partial void OnSearchQueryChanged(string value) => ApplySearch();
+
+    void ApplySearch()
+    {
+        var query = SearchQuery.Trim();
+
+        var items = query.Length == 0
+            ? _loaded
+            : [.. _loaded.Where(item => item.Matches(query))];
+
+        Conversations.Clear();
+
+        foreach (var item in items)
+            Conversations.Add(item);
+    }
 
     [RelayCommand]
     public async Task LoadAsync()
@@ -65,19 +91,18 @@ public sealed partial class ConversationsViewModel(
 
             await Task.WhenAll(conversationsTask, unreadTask);
 
-            Conversations.Clear();
+            _loaded = [.. (await conversationsTask).Select(c => new ConversationItem(c))];
 
-            foreach (var conversation in await conversationsTask)
-                Conversations.Add(conversation);
+            ApplySearch();
 
             UnreadCount = (await unreadTask).Count;
         });
     }
 
     [RelayCommand]
-    static async Task OpenAsync(ConversationDto? conversation)
+    static async Task OpenAsync(ConversationItem? item)
     {
-        if (conversation?.Partner is not { } partner)
+        if (item?.Partner is not { } partner)
             return;
 
         await Shell.Current.GoToAsync($"chat?partnerId={partner.Id}&partnerName={Uri.EscapeDataString(partner.Name)}");

@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Vissza.Maui.Maps;
@@ -32,6 +33,29 @@ public sealed partial class CollectViewModel(IServiceProvider services, AuthServ
 
     /// <summary>A megjelenített elemek távolsága, azonosító szerint.</summary>
     public Dictionary<int, double> DistancesKm { get; } = [];
+
+    // --- összesítés ---
+    //
+    // A régi app "Ft keresett" mezője a tranzakció `amount` mezőjét adta
+    // össze - ilyen oszlop viszont nincs, tehát az a szám sosem volt helyes.
+    // Itt ugyanaz az 50 Ft/palack becslés megy, ami a kártyákon is.
+
+    [ObservableProperty]
+    public partial int CollectedBottles { get; set; }
+
+    public string CollectedText => CollectedBottles.ToString(CultureInfo.CurrentCulture);
+
+    public string EarnedText => $"{DomainLabels.EstimatedValue(CollectedBottles):N0}";
+
+    /// <summary>Palackonként nagyjából 5 dkg megtakarított szén-dioxid.</summary>
+    public string Co2Text => (CollectedBottles * 0.05).ToString("0.0", CultureInfo.CurrentCulture);
+
+    partial void OnCollectedBottlesChanged(int value)
+    {
+        OnPropertyChanged(nameof(CollectedText));
+        OnPropertyChanged(nameof(EarnedText));
+        OnPropertyChanged(nameof(Co2Text));
+    }
 
     // --- nézetváltó ---
     //
@@ -120,6 +144,10 @@ public sealed partial class CollectViewModel(IServiceProvider services, AuthServ
     [RelayCommand]
     public async Task LoadAsync()
     {
+        // Az összesítés minden nézetben ott van, ezért nézettől függetlenül
+        // frissül - egy lezárt átvétel után rögtön nőnie kell.
+        await LoadStatisticsAsync();
+
         if (!IsAvailableView)
         {
             await LoadPickupsAsync();
@@ -185,6 +213,29 @@ public sealed partial class CollectViewModel(IServiceProvider services, AuthServ
             foreach (var transaction in transactions.OrderByDescending(t => t.CreatedAt))
                 Pickups.Add(new PickupItem(transaction));
         });
+    }
+
+    /// <summary>
+    /// Amit eddig összegyűjtöttem. Csendben fut: az összesítés kiegészítő
+    /// információ, egy elakadt lekérdezés miatt nem kell hibaüzenet a lista
+    /// fölé.
+    /// </summary>
+    async Task LoadStatisticsAsync()
+    {
+        if (auth.CurrentUser is not { } user)
+            return;
+
+        try
+        {
+            var completed = await Api.GetTransactionsAsync(
+                collectorId: user.Id, status: "completed");
+
+            CollectedBottles = completed.Sum(t => t.Quantity);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Az összesítés nem frissült: {ex.Message}");
+        }
     }
 
     /// <summary>Innen nyílik a megerősítés, a lezárás és az értékelés.</summary>

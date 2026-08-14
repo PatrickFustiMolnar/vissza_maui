@@ -2,47 +2,111 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:controls="clr-namespace:Vissza.Maui.Controls"
+             xmlns:res="clr-namespace:Vissza.Maui.Resources"
              xmlns:vm="clr-namespace:Vissza.Maui.ViewModels"
              x:Class="Vissza.Maui.Pages.DashboardPage"
              x:DataType="vm:DashboardViewModel"
              Title="Térkép">
 
-    <ContentPage.ToolbarItems>
-        <ToolbarItem Text="Kijelentkezés" Command="{Binding SignOutCommand}" />
-    </ContentPage.ToolbarItems>
+    <!--
+        A térkép a képernyő, nem egy elem rajta: minden más lebeg fölötte.
+        Üdvözlés és kijelentkezés szándékosan nincs itt - a név a
+        Beállításokban van, a kijelentkezés is ott.
+    -->
 
     <Grid>
 
         <controls:VisszaMapView x:Name="MapView" />
 
-        <!-- Üdvözlés és szűrők a térkép fölött -->
+        <!-- Gyorsgombok: a két leggyakoribb művelet, kéznél. -->
+        <HorizontalStackLayout Margin="12" Spacing="8" VerticalOptions="Start">
+            <Button Text="Felajánlás"
+                    Command="{Binding OpenGiveCommand}"
+                    ContentLayout="Left,6"
+                    Padding="14,8"
+                    FontSize="{StaticResource FontSizeBody}">
+                <Button.ImageSource>
+                    <FontImageSource FontFamily="Icons" Glyph="{x:Static res:Icons.Gift}" Size="18"
+                                     Color="{StaticResource TextOnAccent}" />
+                </Button.ImageSource>
+            </Button>
+
+            <Button Text="Gyűjtés"
+                    Command="{Binding OpenCollectCommand}"
+                    ContentLayout="Left,6"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
+                    TextColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}"
+                    Padding="14,8"
+                    FontSize="{StaticResource FontSizeBody}">
+                <Button.ImageSource>
+                    <FontImageSource FontFamily="Icons" Glyph="{x:Static res:Icons.Package}" Size="18"
+                                     Color="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
+                </Button.ImageSource>
+            </Button>
+        </HorizontalStackLayout>
+
+        <!-- Kerek térképgombok: szűrők és saját helyzet -->
+        <VerticalStackLayout Margin="0,64,12,0"
+                             Spacing="10"
+                             HorizontalOptions="End"
+                             VerticalOptions="Start">
+            <Border Style="{StaticResource MapButton}">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding ToggleFiltersCommand}" />
+                </Border.GestureRecognizers>
+                <Label Text="{x:Static res:Icons.Filter}" Style="{StaticResource MutedIconLabel}" />
+            </Border>
+
+            <Border Style="{StaticResource MapButton}">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding LocateCommand}" />
+                </Border.GestureRecognizers>
+                <Label Text="{x:Static res:Icons.LocateMe}" Style="{StaticResource MutedIconLabel}" />
+            </Border>
+        </VerticalStackLayout>
+
+        <!-- Szűrők, a gomb mögött -->
         <Border Style="{StaticResource CardBorder}"
-                Margin="12"
+                IsVisible="{Binding ShowFilters}"
+                Margin="12,64,64,0"
                 Padding="12"
                 VerticalOptions="Start">
             <VerticalStackLayout Spacing="8">
-                <Label Text="{Binding Greeting}" FontSize="{StaticResource FontSizeSubtitle}" />
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Text="Szűrők" FontAttributes="Bold" VerticalOptions="Center" />
+                    <Label Grid.Column="1"
+                           Text="{x:Static res:Icons.Close}"
+                           Style="{StaticResource MutedIconLabel}"
+                           FontSize="18">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ToggleFiltersCommand}" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                </Grid>
 
-                <HorizontalStackLayout Spacing="16">
-                    <HorizontalStackLayout Spacing="6">
-                        <Switch IsToggled="{Binding ShowOffers}"
-                                OnColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
-                        <Label Text="Felajánlások" VerticalOptions="Center" Style="{StaticResource SecondaryLabel}" />
-                    </HorizontalStackLayout>
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Text="Felajánlások" VerticalOptions="Center" />
+                    <Switch Grid.Column="1"
+                            IsToggled="{Binding ShowOffers}"
+                            OnColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
+                </Grid>
 
-                    <HorizontalStackLayout Spacing="6">
-                        <Switch IsToggled="{Binding ShowReturnLocations}"
-                                OnColor="{AppThemeBinding Light={StaticResource WarningLight}, Dark={StaticResource WarningDark}}" />
-                        <Label Text="Visszaváltók" VerticalOptions="Center" Style="{StaticResource SecondaryLabel}" />
-                    </HorizontalStackLayout>
-                </HorizontalStackLayout>
-
-                <Label Text="{Binding ErrorMessage}"
-                       IsVisible="{Binding HasError}"
-                       TextColor="{AppThemeBinding Light={StaticResource ErrorLight}, Dark={StaticResource ErrorDark}}"
-                       FontSize="{StaticResource FontSizeCaption}" />
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Text="Visszaváltó helyek" VerticalOptions="Center" />
+                    <Switch Grid.Column="1"
+                            IsToggled="{Binding ShowReturnLocations}"
+                            OnColor="{AppThemeBinding Light={StaticResource WarningLight}, Dark={StaticResource WarningDark}}" />
+                </Grid>
             </VerticalStackLayout>
         </Border>
+
+        <Label Text="{Binding ErrorMessage}"
+               IsVisible="{Binding HasError}"
+               Margin="12"
+               VerticalOptions="Start"
+               HorizontalOptions="Center"
+               TextColor="{AppThemeBinding Light={StaticResource ErrorLight}, Dark={StaticResource ErrorDark}}"
+               FontSize="{StaticResource FontSizeCaption}" />
 
         <!-- A kiválasztott tű részletei -->
         <Border Style="{StaticResource CardBorder}"
@@ -50,24 +114,36 @@
                 Margin="12,0,12,12"
                 VerticalOptions="End">
             <VerticalStackLayout Spacing="6">
-                <Label Text="{Binding SelectionTitle}"
-                       FontSize="{StaticResource FontSizeSubtitle}"
-                       FontAttributes="Bold" />
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Text="{Binding SelectionTitle}"
+                           FontSize="{StaticResource FontSizeSubtitle}"
+                           FontAttributes="Bold"
+                           VerticalOptions="Center" />
+                    <Label Grid.Column="1"
+                           Text="{x:Static res:Icons.Close}"
+                           Style="{StaticResource MutedIconLabel}"
+                           FontSize="18">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ClearSelectionCommand}" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                </Grid>
+
                 <Label Text="{Binding SelectionSubtitle}" Style="{StaticResource SecondaryLabel}" />
 
-                <HorizontalStackLayout Spacing="8" Margin="0,6,0,0">
-                    <Button Text="Részletek"
-                            Command="{Binding OpenOfferCommand}"
-                            IsVisible="{Binding CanOpenOffer}"
-                            Padding="12,6"
-                            FontSize="{StaticResource FontSizeCaption}" />
-                    <Button Text="Bezár"
-                            Command="{Binding ClearSelectionCommand}"
-                            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceMutedLight}, Dark={StaticResource SurfaceMutedDark}}"
-                            TextColor="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}"
-                            Padding="12,6"
-                            FontSize="{StaticResource FontSizeCaption}" />
-                </HorizontalStackLayout>
+                <Button Text="Részletek"
+                        Command="{Binding OpenOfferCommand}"
+                        IsVisible="{Binding CanOpenOffer}"
+                        ContentLayout="Right,6"
+                        HorizontalOptions="Start"
+                        Margin="0,6,0,0"
+                        Padding="12,6"
+                        FontSize="{StaticResource FontSizeCaption}">
+                    <Button.ImageSource>
+                        <FontImageSource FontFamily="Icons" Glyph="{x:Static res:Icons.ChevronRight}" Size="16"
+                                         Color="{StaticResource TextOnAccent}" />
+                    </Button.ImageSource>
+                </Button>
             </VerticalStackLayout>
         </Border>
 

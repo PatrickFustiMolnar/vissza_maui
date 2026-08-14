@@ -27,6 +27,32 @@ public static class DomainLabels
         _ => "Egyéb"
     };
 
+    public static string LocationType(LocationType type) => type switch
+    {
+        Shared.Enums.LocationType.Automata => "Automata",
+        Shared.Enums.LocationType.Uzlet => "Üzlet",
+        _ => "Gyűjtőpont"
+    };
+
+    /// <summary>
+    /// A visszaváltó helyek "pet,glass" alakú listáját olvasható felsorolássá.
+    /// Ismeretlen elemet változatlanul hagyunk - egy új típus így legalább
+    /// megjelenik, nem tűnik el.
+    /// </summary>
+    public static string AcceptedTypes(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+            return string.Empty;
+
+        var labels = raw
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(part => Enum.TryParse<BottleType>(part, ignoreCase: true, out var type)
+                ? BottleTypeShort(type)
+                : part);
+
+        return string.Join(", ", labels);
+    }
+
     public static string UserRole(UserRole role) => role switch
     {
         Shared.Enums.UserRole.Donor => "Csak felajánló",

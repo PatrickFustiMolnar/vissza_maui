@@ -9,13 +9,49 @@
              x:DataType="vm:CollectViewModel"
              Title="Gyűjtés">
 
-    <Grid RowDefinitions="Auto,Auto,Auto,*">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*">
+
+        <!-- Alcím és összesítés, ahogy a régi képernyő fejlécében. -->
+        <VerticalStackLayout Padding="16,8,16,0" Spacing="10">
+            <Label Text="Találd meg a közeli felajánlásokat"
+                   Style="{StaticResource SecondaryLabel}" />
+
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                <Border Style="{StaticResource StatCard}">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="{x:Static res:Icons.Leaf}" Style="{StaticResource IconLabel}" />
+                        <Label Text="{Binding CollectedText}" Style="{StaticResource StatNumber}" />
+                        <Label Text="Összegyűjtött" Style="{StaticResource StatLabel}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Grid.Column="1" Style="{StaticResource StatCard}">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="{x:Static res:Icons.Cash}" Style="{StaticResource IconLabel}" />
+                        <Label Text="{Binding EarnedText}" Style="{StaticResource StatNumber}" />
+                        <Label Text="Ft becsült" Style="{StaticResource StatLabel}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Grid.Column="2" Style="{StaticResource StatCard}">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="{x:Static res:Icons.Recycle}"
+                               Style="{StaticResource IconLabel}"
+                               TextColor="{AppThemeBinding Light={StaticResource InfoLight}, Dark={StaticResource InfoDark}}" />
+                        <Label Text="{Binding Co2Text}"
+                               Style="{StaticResource StatNumber}"
+                               TextColor="{AppThemeBinding Light={StaticResource InfoLight}, Dark={StaticResource InfoDark}}" />
+                        <Label Text="kg CO₂" Style="{StaticResource StatLabel}" />
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+        </VerticalStackLayout>
 
         <!--
             Nézetváltó. A régi appban ez három ikonos gomb volt: elérhető
             felajánlások, folyamatban lévő átvételek, lezártak.
         -->
-        <Grid ColumnDefinitions="*,*,*" Padding="16,10,16,0" ColumnSpacing="8">
+        <Grid Grid.Row="1" ColumnDefinitions="*,*,*" Padding="16,10,16,0" ColumnSpacing="8">
             <Button Text="Elérhető"
                     Command="{Binding SelectViewCommand}"
                     CommandParameter="0"
@@ -77,13 +113,13 @@
         </Grid>
 
         <!-- Térkép: csak az elérhető felajánlásokhoz van értelme. -->
-        <controls:VisszaMapView Grid.Row="1"
+        <controls:VisszaMapView Grid.Row="2"
                                 x:Name="MapView"
                                 HeightRequest="200"
                                 IsVisible="{Binding ShowSearchTools}" />
 
         <!-- Szűrők -->
-        <Border Grid.Row="2"
+        <Border Grid.Row="3"
                 Style="{StaticResource CardBorder}"
                 IsVisible="{Binding ShowSearchTools}"
                 Margin="12,8"
@@ -131,7 +167,7 @@
         </Border>
 
         <!-- Elérhető felajánlások -->
-        <RefreshView Grid.Row="3"
+        <RefreshView Grid.Row="4"
                      IsVisible="{Binding ShowSearchTools}"
                      IsRefreshing="{Binding IsBusy}"
                      Command="{Binding LoadCommand}">
@@ -167,7 +203,7 @@
         </RefreshView>
 
         <!-- A saját átvételeim: folyamatban vagy lezárva -->
-        <RefreshView Grid.Row="3"
+        <RefreshView Grid.Row="4"
                      IsVisible="{Binding ShowSearchTools, Converter={StaticResource Not}}"
                      IsRefreshing="{Binding IsBusy}"
                      Command="{Binding LoadCommand}">
@@ -232,7 +268,7 @@
         </RefreshView>
 
         <!-- Jelentkezés a kiválasztott felajánlásra -->
-        <Border Grid.RowSpan="4"
+        <Border Grid.RowSpan="5"
                 Style="{StaticResource CardBorder}"
                 IsVisible="{Binding HasSelection}"
                 Margin="16"

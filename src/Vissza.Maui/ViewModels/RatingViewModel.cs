@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Vissza.Maui.Resources;
 using Vissza.Maui.Services;
 using Vissza.Shared.Dtos;
 
@@ -33,7 +34,20 @@ public sealed partial class RatingViewModel(IServiceProvider services, AuthServi
     [ObservableProperty]
     public partial string Comment { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Mit értékelek. A régi képernyő is kiírta a mennyiséget és a helyszínt -
+    /// enélkül több lezárt átvétel után nem derül ki, melyikről van szó.
+    /// </summary>
+    [ObservableProperty]
+    public partial string SummaryText { get; set; } = string.Empty;
+
+    public bool HasSummary => SummaryText.Length > 0;
+
+    partial void OnSummaryTextChanged(string value) => OnPropertyChanged(nameof(HasSummary));
+
     public bool IsEditing => _existing is not null;
+
+    public string HeaderText => IsEditing ? "Értékelés szerkesztése" : "Értékelés";
 
     public string SubmitText => IsEditing ? "Értékelés módosítása" : "Értékelés küldése";
 
@@ -58,9 +72,12 @@ public sealed partial class RatingViewModel(IServiceProvider services, AuthServi
 
         await RunAsync(async () =>
         {
-            var ratings = await Api.GetRatingsAsync(transactionId: TransactionId, raterId: user.Id);
+            var ratingsTask = Api.GetRatingsAsync(transactionId: TransactionId, raterId: user.Id);
+            var transactionTask = Api.GetTransactionAsync(TransactionId);
 
-            _existing = ratings.FirstOrDefault(r => r.RatedId == RatedId);
+            await Task.WhenAll(ratingsTask, transactionTask);
+
+            _existing = (await ratingsTask).FirstOrDefault(r => r.RatedId == RatedId);
 
             if (_existing is { } rating)
             {
@@ -68,7 +85,13 @@ public sealed partial class RatingViewModel(IServiceProvider services, AuthServi
                 Comment = rating.Comment ?? string.Empty;
             }
 
+            var transaction = await transactionTask;
+
+            SummaryText = $"{transaction.Quantity} db "
+                + $"{DomainLabels.BottleTypeShort(transaction.BottleType)} · {transaction.Location}";
+
             OnPropertyChanged(nameof(IsEditing));
+            OnPropertyChanged(nameof(HeaderText));
             OnPropertyChanged(nameof(SubmitText));
         });
     }
