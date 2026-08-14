@@ -68,11 +68,15 @@
                                IsVisible="{Binding IsBusy}"
                                HorizontalOptions="Center" />
 
-            <Button Text="Van már fiókod? Jelentkezz be"
-                    Command="{Binding GoToSignInCommand}"
-                    BackgroundColor="Transparent"
-                    TextColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}"
-                    FontSize="{StaticResource FontSizeBody}" />
+            <Label Text="Van már fiókod? Jelentkezz be"
+                   HorizontalOptions="Center"
+                   Padding="12"
+                   TextColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}"
+                   FontSize="{StaticResource FontSizeBody}">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding GoToSignInCommand}" />
+                </Label.GestureRecognizers>
+            </Label>
 
         </VerticalStackLayout>
     </ScrollView>

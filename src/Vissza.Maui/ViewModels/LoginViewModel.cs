@@ -33,5 +33,18 @@ public sealed partial class LoginViewModel(AuthService auth) : ViewModelBase
     }
 
     [RelayCommand]
-    static Task GoToRegisterAsync() => Shell.Current.GoToAsync("//register");
+    async Task GoToRegisterAsync()
+    {
+        // A navigáció hibája eddig némán elveszett: a parancs async void
+        // környezetben futott, a kivétel sehol nem jelent meg. Így legalább
+        // a felhasználó és a napló is látja.
+        try
+        {
+            await Shell.Current.GoToAsync("//register");
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Navigációs hiba: {ex.Message}";
+        }
+    }
 }

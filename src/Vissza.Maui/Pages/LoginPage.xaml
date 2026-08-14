@@ -38,11 +38,17 @@
                     Command="{Binding SignInCommand}"
                     IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
 
-            <Button Text="Nincs még fiókod? Regisztrálj"
-                    Command="{Binding GoToRegisterCommand}"
-                    BackgroundColor="Transparent"
-                    TextColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}"
-                    FontSize="{StaticResource FontSizeBody}" />
+            <!-- Label + koppintásfigyelő, nem átlátszó hátterű Button: az
+                 utóbbi ugyan kirajzolódott, de a parancsa nem sült el. -->
+            <Label Text="Nincs még fiókod? Regisztrálj"
+                   HorizontalOptions="Center"
+                   Padding="12"
+                   TextColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}"
+                   FontSize="{StaticResource FontSizeBody}">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding GoToRegisterCommand}" />
+                </Label.GestureRecognizers>
+            </Label>
 
             <ActivityIndicator IsRunning="{Binding IsBusy}"
                                IsVisible="{Binding IsBusy}"

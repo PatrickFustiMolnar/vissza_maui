@@ -91,5 +91,15 @@ public sealed partial class RegisterViewModel(AuthService auth) : ViewModelBase
     }
 
     [RelayCommand]
-    static Task GoToSignInAsync() => Shell.Current.GoToAsync("//login");
+    async Task GoToSignInAsync()
+    {
+        try
+        {
+            await Shell.Current.GoToAsync("//login");
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Navigációs hiba: {ex.Message}";
+        }
+    }
 }
