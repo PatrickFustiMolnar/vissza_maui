@@ -21,6 +21,10 @@ public static class MauiProgram
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+
+                // Ugyanaz a készlet, amit a régi app használt
+                // (react-native-vector-icons), tehát az ikonok megegyeznek.
+                fonts.AddFont("MaterialCommunityIcons.ttf", "Icons");
             });
 
         builder.Services.AddSingleton<AuthService>();

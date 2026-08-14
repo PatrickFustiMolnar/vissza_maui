@@ -2,6 +2,7 @@
 <Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
        xmlns:pages="clr-namespace:Vissza.Maui.Pages"
+       xmlns:res="clr-namespace:Vissza.Maui.Resources"
        x:Class="Vissza.Maui.AppShell"
        FlyoutBehavior="Disabled">
 
@@ -10,8 +11,11 @@
         A GoToAsync("//login") és ("//home") vált közöttük, így a
         vissza gomb nem tud visszalépni a kijelentkezés mögé.
 
-        A lapfül "Profil", nem "Beállítások": a képernyő nagyobb része a
-        profil, és a rövidebb szó fér ki öt lapfül mellett.
+        A lapfülek sorrendje és neve a régi appot követi (Térkép, Felajánlás,
+        Gyűjtés, Beállítások); az Üzenetek nálunk külön fül, mert a
+        beszélgetés az egyik leggyakoribb művelet, és a régiben csak a
+        Beállításokon keresztül lehetett odajutni. A Beállításokból is
+        elérhető marad, olvasatlan jelvénnyel.
     -->
 
     <ShellContent Route="login"
@@ -24,19 +28,43 @@
     <TabBar Route="home">
         <ShellContent Route="dashboard"
                       Title="Térkép"
-                      ContentTemplate="{DataTemplate pages:DashboardPage}" />
-        <ShellContent Route="collect"
-                      Title="Gyűjtés"
-                      ContentTemplate="{DataTemplate pages:CollectPage}" />
-        <ShellContent Route="messages"
-                      Title="Üzenetek"
-                      ContentTemplate="{DataTemplate pages:ConversationsPage}" />
+                      ContentTemplate="{DataTemplate pages:DashboardPage}">
+            <ShellContent.Icon>
+                <FontImageSource FontFamily="Icons" Glyph="{x:Static res:Icons.Map}" />
+            </ShellContent.Icon>
+        </ShellContent>
+
         <ShellContent Route="give"
                       Title="Felajánlás"
-                      ContentTemplate="{DataTemplate pages:GivePage}" />
+                      ContentTemplate="{DataTemplate pages:GivePage}">
+            <ShellContent.Icon>
+                <FontImageSource FontFamily="Icons" Glyph="{x:Static res:Icons.Gift}" />
+            </ShellContent.Icon>
+        </ShellContent>
+
+        <ShellContent Route="collect"
+                      Title="Gyűjtés"
+                      ContentTemplate="{DataTemplate pages:CollectPage}">
+            <ShellContent.Icon>
+                <FontImageSource FontFamily="Icons" Glyph="{x:Static res:Icons.Package}" />
+            </ShellContent.Icon>
+        </ShellContent>
+
+        <ShellContent Route="messages"
+                      Title="Üzenetek"
+                      ContentTemplate="{DataTemplate pages:ConversationsPage}">
+            <ShellContent.Icon>
+                <FontImageSource FontFamily="Icons" Glyph="{x:Static res:Icons.Message}" />
+            </ShellContent.Icon>
+        </ShellContent>
+
         <ShellContent Route="settings"
-                      Title="Profil"
-                      ContentTemplate="{DataTemplate pages:SettingsPage}" />
+                      Title="Beállítások"
+                      ContentTemplate="{DataTemplate pages:SettingsPage}">
+            <ShellContent.Icon>
+                <FontImageSource FontFamily="Icons" Glyph="{x:Static res:Icons.Cog}" />
+            </ShellContent.Icon>
+        </ShellContent>
     </TabBar>
 
 </Shell>

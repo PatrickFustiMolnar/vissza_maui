@@ -45,6 +45,25 @@
         <Setter Property="FontSize" Value="{StaticResource FontSizeCaption}" />
     </Style>
 
+    <!--
+        Ikon szövegként. A Material Design Icons betűkészletben minden ikon
+        egy karakter; a kódpontokat a Resources/Icons.cs sorolja fel.
+    -->
+    <Style x:Key="IconLabel" TargetType="Label">
+        <Setter Property="FontFamily" Value="Icons" />
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="HorizontalOptions" Value="Center" />
+        <Setter Property="TextColor"
+                Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
+    </Style>
+
+    <!-- Halvány változat: sorok elején, ahol az ikon kísér, nem hangsúlyoz. -->
+    <Style x:Key="MutedIconLabel" TargetType="Label" BasedOn="{StaticResource IconLabel}">
+        <Setter Property="TextColor"
+                Value="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
+    </Style>
+
     <Style x:Key="HeadingLabel" TargetType="Label">
         <Setter Property="TextColor"
                 Value="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}" />
@@ -82,6 +101,21 @@
                 </VisualStateGroup>
             </VisualStateGroupList>
         </Setter>
+    </Style>
+
+    <!--
+        Nézetváltó gomb: ikon fölül, címke alul. Alapból halvány; a kiválasztott
+        állapotot a hívó oldal DataTriggere festi ki - így nem kell hozzá
+        konverter, és a témaváltást is követi.
+    -->
+    <Style x:Key="ViewTab" TargetType="Button">
+        <Setter Property="BackgroundColor"
+                Value="{AppThemeBinding Light={StaticResource SurfaceMutedLight}, Dark={StaticResource SurfaceMutedDark}}" />
+        <Setter Property="TextColor"
+                Value="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeCaption}" />
+        <Setter Property="Padding" Value="6,8" />
+        <Setter Property="CornerRadius" Value="8" />
     </Style>
 
     <!-- Kártya: a listaelemek és a részletpanelek közös kerete -->

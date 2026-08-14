@@ -27,8 +27,56 @@ public sealed partial class CollectViewModel(IServiceProvider services, AuthServ
 
     public ObservableCollection<OfferDto> Offers { get; } = [];
 
+    /// <summary>A saját átvételeim - folyamatban vagy lezárva.</summary>
+    public ObservableCollection<PickupItem> Pickups { get; } = [];
+
     /// <summary>A megjelenített elemek távolsága, azonosító szerint.</summary>
     public Dictionary<int, double> DistancesKm { get; } = [];
+
+    // --- nézetváltó ---
+    //
+    // Három nézet, ahogy a régi appban: elérhető felajánlások, a saját
+    // folyamatban lévő átvételeim, és a lezártak. A második kettő nélkül a
+    // gyűjtői oldal a jelentkezés elküldése után megszakadt: nem volt út a
+    // saját átvételhez, tehát megerősíteni, lezárni és értékelni sem lehetett.
+
+    [ObservableProperty]
+    public partial int SelectedViewIndex { get; set; }
+
+    public bool IsAvailableView => SelectedViewIndex == 0;
+    public bool IsPendingView => SelectedViewIndex == 1;
+    public bool IsCompletedView => SelectedViewIndex == 2;
+
+    /// <summary>A térkép és a szűrők csak az elérhető felajánlásokhoz valók.</summary>
+    public bool ShowSearchTools => IsAvailableView;
+
+    public string EmptyText => SelectedViewIndex switch
+    {
+        1 => "Nincs folyamatban lévő átvételed.",
+        2 => "Még nincs lezárt átvételed.",
+        _ => "Nincs a szűrőknek megfelelő felajánlás."
+    };
+
+    partial void OnSelectedViewIndexChanged(int value)
+    {
+        foreach (var name in new[]
+        {
+            nameof(IsAvailableView), nameof(IsPendingView), nameof(IsCompletedView),
+            nameof(ShowSearchTools), nameof(EmptyText)
+        })
+        {
+            OnPropertyChanged(name);
+        }
+
+        _ = LoadAsync();
+    }
+
+    [RelayCommand]
+    void SelectView(string? index)
+    {
+        if (int.TryParse(index, out var parsed))
+            SelectedViewIndex = parsed;
+    }
 
     public event EventHandler<IReadOnlyList<MapPin>>? PinsChanged;
     public event EventHandler<(double Lat, double Lng)>? CenterRequested;
@@ -72,6 +120,12 @@ public sealed partial class CollectViewModel(IServiceProvider services, AuthServ
     [RelayCommand]
     public async Task LoadAsync()
     {
+        if (!IsAvailableView)
+        {
+            await LoadPickupsAsync();
+            return;
+        }
+
         await ResolvePositionAsync();
 
         await RunAsync(async () =>
@@ -108,6 +162,40 @@ public sealed partial class CollectViewModel(IServiceProvider services, AuthServ
 
     [RelayCommand]
     Task ApplyFiltersAsync() => LoadAsync();
+
+    /// <summary>
+    /// A saját átvételeim. Az elfogadott jelentkezésből a szerver azonnal
+    /// átvételt nyit, ezért elég a tranzakciókat kérdezni - azok viszik a
+    /// mennyiséget, a helyszínt és a megerősítések állását is.
+    /// </summary>
+    async Task LoadPickupsAsync()
+    {
+        if (auth.CurrentUser is not { } user)
+            return;
+
+        await RunAsync(async () =>
+        {
+            var status = IsCompletedView ? "completed" : "pending";
+
+            var transactions = await Api.GetTransactionsAsync(
+                collectorId: user.Id, status: status);
+
+            Pickups.Clear();
+
+            foreach (var transaction in transactions.OrderByDescending(t => t.CreatedAt))
+                Pickups.Add(new PickupItem(transaction));
+        });
+    }
+
+    /// <summary>Innen nyílik a megerősítés, a lezárás és az értékelés.</summary>
+    [RelayCommand]
+    static async Task OpenPickupAsync(PickupItem? pickup)
+    {
+        if (pickup is null)
+            return;
+
+        await Shell.Current.GoToAsync($"transaction?transactionId={pickup.Id}");
+    }
 
     async Task ResolvePositionAsync()
     {
