@@ -78,11 +78,32 @@ public static class CollectionRequestEndpoints
         if (!await db.Offers.AnyAsync(o => o.Id == request.OfferId, ct))
             return Results.NotFound(new MessageResponse("Offer not found"));
 
-        var duplicate = await db.CollectionRequests
-            .AnyAsync(r => r.OfferId == request.OfferId && r.CollectorId == userId, ct);
+        var existing = await db.CollectionRequests
+            .FirstOrDefaultAsync(r => r.OfferId == request.OfferId && r.CollectorId == userId, ct);
 
-        if (duplicate)
-            return Results.BadRequest(new MessageResponse("Request already exists"));
+        if (existing is not null)
+        {
+            // A visszavont jelentkezés nem zár ki örökre. A régi API státusztól
+            // függetlenül nézte a duplikátumot, így aki egyszer visszavonta,
+            // sosem jelentkezhetett újra ugyanarra a felajánlásra - miközben a
+            // felület pont felkínálta a visszavonást.
+            //
+            // Új sort nem írhatunk: az (offer_id, collector_id) páron egyedi
+            // index van. A meglévőt élesztjük újra.
+            //
+            // Az elutasított továbbra is zár: a felajánló döntését nem lehet
+            // újrajelentkezéssel megkerülni.
+            if (existing.Status != RequestStatus.Cancelled)
+                return Results.BadRequest(new MessageResponse("Request already exists"));
+
+            existing.Status = request.Status ?? RequestStatus.Pending;
+            existing.Message = request.Message;
+
+            await db.SaveChangesAsync(ct);
+
+            return Results.Created($"/api/collection-requests/{existing.Id}",
+                await LoadDtoAsync(db, existing.Id, ct));
+        }
 
         var entity = new CollectionRequest
         {

@@ -152,7 +152,7 @@ public sealed partial class SettingsViewModel(
             Name = user.Name;
             Email = user.Email;
             ProfileImage = user.ProfileImage;
-            Initials = MakeInitials(user.Name);
+            Initials = DomainLabels.Initials(user.Name);
 
             HasRating = user.AverageRating > 0;
             RatingSummary = $"{user.AverageRating.ToString("0.0", CultureInfo.CurrentCulture)} ({user.TotalRatings} értékelés)";
@@ -174,18 +174,6 @@ public sealed partial class SettingsViewModel(
         {
             _loading = false;
         }
-    }
-
-    /// <summary>"Kovács János" → "KJ". Üres névből "?" lesz, nem üres kör.</summary>
-    static string MakeInitials(string name)
-    {
-        var letters = name
-            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
-            .Select(part => char.ToUpperInvariant(part[0]));
-
-        var initials = string.Concat(letters);
-
-        return initials.Length == 0 ? "?" : initials;
     }
 
     // --- mentés ---

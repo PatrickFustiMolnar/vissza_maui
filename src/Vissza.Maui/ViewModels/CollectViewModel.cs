@@ -227,6 +227,19 @@ public sealed partial class CollectViewModel(IServiceProvider services, AuthServ
     [RelayCommand]
     void CancelSelection() => SelectedOffer = null;
 
+    /// <summary>
+    /// A teljes lap: fénykép, elérhetőségi idő, megjegyzés, felajánló. A
+    /// listakártya ezeket nem fér ki, a döntéshez viszont kellhetnek.
+    /// </summary>
+    [RelayCommand]
+    static async Task OpenDetailAsync(OfferDto? offer)
+    {
+        if (offer is null)
+            return;
+
+        await Shell.Current.GoToAsync($"offer?offerId={offer.Id}");
+    }
+
     [RelayCommand]
     async Task SendRequestAsync()
     {

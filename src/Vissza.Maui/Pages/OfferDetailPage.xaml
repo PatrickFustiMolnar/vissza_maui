@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:Vissza.Maui.Controls"
+             xmlns:vm="clr-namespace:Vissza.Maui.ViewModels"
+             x:Class="Vissza.Maui.Pages.OfferDetailPage"
+             x:DataType="vm:OfferDetailViewModel"
+             Title="Felajánlás részletei">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="16">
+
+            <!-- Fénykép. Csak akkor foglal helyet, ha tényleg van kép. -->
+            <Border IsVisible="{Binding HasPhoto}"
+                    StrokeThickness="0"
+                    Padding="0">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12" />
+                </Border.StrokeShape>
+                <Image Source="{Binding PhotoUrl}"
+                       Aspect="AspectFill"
+                       HeightRequest="220" />
+            </Border>
+
+            <!-- Mennyiség és jelvények -->
+            <Border Style="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="10">
+
+                    <HorizontalStackLayout Spacing="8">
+                        <Label Text="{Binding QuantityText}"
+                               FontSize="32"
+                               FontAttributes="Bold" />
+                        <Label Text="db palack"
+                               FontSize="{StaticResource FontSizeSubtitle}"
+                               VerticalOptions="End"
+                               Margin="0,0,0,4"
+                               Style="{StaticResource SecondaryLabel}" />
+                    </HorizontalStackLayout>
+
+                    <Label Text="{Binding EstimatedValueText}" Style="{StaticResource SecondaryLabel}" />
+
+                    <HorizontalStackLayout Spacing="8">
+                        <controls:BadgeView Kind="{Binding BottleTypeKind}" Text="{Binding BottleTypeLabel}" />
+                        <controls:BadgeView Kind="{Binding StatusKind}"
+                                            Text="{Binding StatusLabel}"
+                                            IsVisible="{Binding ShowStatusBadge}" />
+                    </HorizontalStackLayout>
+
+                    <Label Text="{Binding OtherDescription}"
+                           IsVisible="{Binding ShowOtherDescription}"
+                           Margin="0,4,0,0" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Helyszín -->
+            <Border Style="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Helyszín"
+                           FontSize="{StaticResource FontSizeSubtitle}"
+                           FontAttributes="Bold" />
+                    <Label Text="{Binding Address}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Elérhető időpont -->
+            <Border Style="{StaticResource CardBorder}" IsVisible="{Binding HasAvailability}">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Elérhető időpont"
+                           FontSize="{StaticResource FontSizeSubtitle}"
+                           FontAttributes="Bold" />
+                    <Label Text="{Binding AvailabilityText}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Megjegyzés -->
+            <Border Style="{StaticResource CardBorder}" IsVisible="{Binding HasNotes}">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Megjegyzés"
+                           FontSize="{StaticResource FontSizeSubtitle}"
+                           FontAttributes="Bold" />
+                    <Label Text="{Binding Notes}" Style="{StaticResource SecondaryLabel}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Felajánló -->
+            <Border Style="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Felajánló"
+                           FontSize="{StaticResource FontSizeSubtitle}"
+                           FontAttributes="Bold" />
+
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <Border WidthRequest="48"
+                                HeightRequest="48"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}"
+                                StrokeThickness="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="24" />
+                            </Border.StrokeShape>
+                            <Grid>
+                                <Label Text="{Binding DonorInitials}"
+                                       IsVisible="{Binding HasDonorImage, Converter={StaticResource Not}}"
+                                       FontSize="{StaticResource FontSizeSubtitle}"
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource TextOnAccent}"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center" />
+                                <Image Source="{Binding DonorImage}"
+                                       IsVisible="{Binding HasDonorImage}"
+                                       Aspect="AspectFill"
+                                       WidthRequest="48"
+                                       HeightRequest="48" />
+                            </Grid>
+                        </Border>
+
+                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                            <Label Text="{Binding DonorName}" FontAttributes="Bold" />
+                            <Label Text="{Binding DonorRatingText}"
+                                   IsVisible="{Binding HasDonorRating}"
+                                   TextColor="{StaticResource StarGold}"
+                                   FontSize="{StaticResource FontSizeCaption}" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Kiválasztott gyűjtő -->
+            <Border Style="{StaticResource CardBorder}" IsVisible="{Binding HasCollector}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Kiválasztott gyűjtő"
+                           FontSize="{StaticResource FontSizeSubtitle}"
+                           FontAttributes="Bold" />
+
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <Border WidthRequest="48"
+                                HeightRequest="48"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}"
+                                StrokeThickness="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="24" />
+                            </Border.StrokeShape>
+                            <Grid>
+                                <Label Text="{Binding CollectorInitials}"
+                                       IsVisible="{Binding HasCollectorImage, Converter={StaticResource Not}}"
+                                       FontSize="{StaticResource FontSizeSubtitle}"
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource TextOnAccent}"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center" />
+                                <Image Source="{Binding CollectorImage}"
+                                       IsVisible="{Binding HasCollectorImage}"
+                                       Aspect="AspectFill"
+                                       WidthRequest="48"
+                                       HeightRequest="48" />
+                            </Grid>
+                        </Border>
+
+                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                            <Label Text="{Binding CollectorName}" FontAttributes="Bold" />
+                            <Label Text="{Binding CollectorRatingText}"
+                                   IsVisible="{Binding HasCollectorRating}"
+                                   TextColor="{StaticResource StarGold}"
+                                   FontSize="{StaticResource FontSizeCaption}" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <Label Text="{Binding ErrorMessage}"
+                   IsVisible="{Binding HasError}"
+                   TextColor="{AppThemeBinding Light={StaticResource ErrorLight}, Dark={StaticResource ErrorDark}}"
+                   FontSize="{StaticResource FontSizeCaption}" />
+
+            <!-- Jelentkezés -->
+            <Border Style="{StaticResource CardBorder}" IsVisible="{Binding CanRequest}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Érdekel ez a felajánlás"
+                           FontSize="{StaticResource FontSizeSubtitle}"
+                           FontAttributes="Bold" />
+
+                    <Entry Placeholder="Üzenet a felajánlónak (nem kötelező)"
+                           Text="{Binding RequestMessage}" />
+
+                    <Button Text="Érdeklődés jelzése"
+                            Command="{Binding SendRequestCommand}"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- A jelentkezésem állapota -->
+            <Border Style="{StaticResource CardBorder}"
+                    IsVisible="{Binding HasRequestState}"
+                    Stroke="{AppThemeBinding Light={StaticResource SuccessBorderLight}, Dark={StaticResource SuccessBorderDark}}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="{Binding RequestStateText}" />
+
+                    <Button Text="Érdeklődés visszavonása"
+                            Command="{Binding WithdrawCommand}"
+                            IsVisible="{Binding CanWithdraw}"
+                            BackgroundColor="Transparent"
+                            BorderWidth="1"
+                            BorderColor="{AppThemeBinding Light={StaticResource ErrorLight}, Dark={StaticResource ErrorDark}}"
+                            TextColor="{AppThemeBinding Light={StaticResource ErrorLight}, Dark={StaticResource ErrorDark}}"
+                            HorizontalOptions="Start"
+                            Padding="12,6"
+                            FontSize="{StaticResource FontSizeCaption}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Button Text="Üzenet küldése"
+                    Command="{Binding OpenChatCommand}"
+                    IsVisible="{Binding CanChat}"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource InfoLight}, Dark={StaticResource InfoDark}}" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Margin="0,0,0,16" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

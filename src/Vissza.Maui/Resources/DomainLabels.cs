@@ -59,4 +59,23 @@ public static class DomainLabels
     /// appban. Nem konfigurálható, mert a valódi betétdíj is fix.
     /// </summary>
     public static int EstimatedValue(int quantity) => quantity * 50;
+
+    /// <summary>
+    /// Monogram a profilkép helyére: "Kovács János" → "KJ". Név nélkül "?",
+    /// mert egy üres kör nem mond semmit.
+    ///
+    /// A régi app helyenként csak az első betűt vette, helyenként a teljes
+    /// monogramot; itt mindenhol ugyanaz.
+    /// </summary>
+    public static string Initials(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return "?";
+
+        var letters = name
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Select(part => char.ToUpperInvariant(part[0]));
+
+        return string.Concat(letters);
+    }
 }

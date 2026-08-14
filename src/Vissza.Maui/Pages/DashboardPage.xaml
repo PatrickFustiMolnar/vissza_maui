@@ -54,12 +54,20 @@
                        FontSize="{StaticResource FontSizeSubtitle}"
                        FontAttributes="Bold" />
                 <Label Text="{Binding SelectionSubtitle}" Style="{StaticResource SecondaryLabel}" />
-                <Button Text="Bezár"
-                        Command="{Binding ClearSelectionCommand}"
-                        HorizontalOptions="Start"
-                        Padding="12,6"
-                        Margin="0,6,0,0"
-                        FontSize="{StaticResource FontSizeCaption}" />
+
+                <HorizontalStackLayout Spacing="8" Margin="0,6,0,0">
+                    <Button Text="Részletek"
+                            Command="{Binding OpenOfferCommand}"
+                            IsVisible="{Binding CanOpenOffer}"
+                            Padding="12,6"
+                            FontSize="{StaticResource FontSizeCaption}" />
+                    <Button Text="Bezár"
+                            Command="{Binding ClearSelectionCommand}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceMutedLight}, Dark={StaticResource SurfaceMutedDark}}"
+                            TextColor="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}"
+                            Padding="12,6"
+                            FontSize="{StaticResource FontSizeCaption}" />
+                </HorizontalStackLayout>
             </VerticalStackLayout>
         </Border>
 

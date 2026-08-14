@@ -54,8 +54,20 @@
 
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="dtos:OfferDto">
-                        <controls:OfferCardView Offer="{Binding .}"
-                                                TapCommand="{Binding BindingContext.SelectCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}}" />
+                        <VerticalStackLayout>
+                            <controls:OfferCardView Offer="{Binding .}"
+                                                    TapCommand="{Binding BindingContext.SelectCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}}" />
+
+                            <Button Text="Részletek"
+                                    Command="{Binding BindingContext.OpenDetailCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}}"
+                                    CommandParameter="{Binding .}"
+                                    BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceMutedLight}, Dark={StaticResource SurfaceMutedDark}}"
+                                    TextColor="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}"
+                                    HorizontalOptions="Start"
+                                    Margin="16,0,16,12"
+                                    Padding="12,6"
+                                    FontSize="{StaticResource FontSizeCaption}" />
+                        </VerticalStackLayout>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
 

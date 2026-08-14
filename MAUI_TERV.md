@@ -368,6 +368,27 @@ keresztül. A kliens sehol nem használja a mezőt.
 
 Az új API-ban mindhárom végpont egyformán viselkedik, e-mail nélkül.
 
+**4. A visszavont jelentkezés örökre kizárt.** *(javítva)*
+
+A `POST /collection-requests` **státusztól függetlenül** nézte a duplikátumot:
+
+```sql
+SELECT * FROM collection_requests WHERE offer_id = ? AND collector_id = ?
+```
+
+Aki egyszer visszavonta az érdeklődését, az sosem jelentkezhetett újra
+ugyanarra a felajánlásra — miközben a felület (`OfferDetailScreen.js:321`,
+`CollectScreen.js:643`) pont felkínálta a visszavonást. A régi kliens ezt el
+is fedte: visszavonás után újratöltött, és a `hasExistingRequest` a törölt
+sor miatt megint igazra állt, tehát a gomb vissza sem jött.
+
+Új sort beszúrni nem lehet, mert az `(offer_id, collector_id)` páron egyedi
+index van (`unique_offer_collector`). Az új API ezért a **meglévő sort
+éleszti újra**, ha az visszavont állapotban van.
+
+Az elutasított továbbra is zár: a felajánló döntését nem lehet
+újrajelentkezéssel megkerülni.
+
 ### 5.3 Képfeltöltés
 
 A `multer` helyett `IFormFile` + `app.UseStaticFiles()`. A képek maradnak helyi
@@ -655,18 +676,17 @@ Az 1. fázis megkezdéséhez el kell dőlnie, hol fut majd az API — lásd alá
 
 ## 10. Következő lépés
 
-A 3. fázis (képernyők) 9 oldalnál tart, mind élő adaton végigjárva:
+**A 3. fázis képernyői megvannak. Mind a 11, élő adaton végigjárva:**
+Login, Register, Dashboard, Give, Collect, Conversations, Chat,
+TransactionDetail, Rating, Settings, OfferDetail.
 
-| Kész | Hátra |
-|---|---|
-| Login, Register, Dashboard, Give, Collect, Conversations, Chat, TransactionDetail, Rating, Settings | **OfferDetail** |
-
-Az `OfferDetailScreen.js` (564 sor) az egyetlen hátralévő képernyő. Utána
-a fázison belüli maradékok:
+Ami a fázison belül még hátravan:
 
 - **Fénykép a felajánláshoz.** A `MediaPicker` + feltöltés útja már él a
-  Beállításokban, tehát a Give-be átemelhető.
-- **Elérhetőségi idősáv a Give-ben.**
+  Beállításokban, tehát a Give-be átemelhető. A részletlap már ki is rajzolja
+  a képet, ha van - a demo adatban egyik felajánlásnak sincs.
+- **Elérhetőségi idősáv a Give-ben.** A részletlap megjeleníti, létrehozni
+  még nem lehet.
 - **Chat: SignalR a lekérdezés helyett** (6.1).
 
 Az API hosztolása továbbra is nyitott, de csak a 4. fázist blokkolja - lásd 9.
@@ -677,6 +697,46 @@ A régi `Desktop/vissza` projekt innentől **csak olvasásra** szolgál referenc
 ---
 
 ## 11. Módosítási napló
+
+### 2026-08-14 — OfferDetail: a 3. fázis képernyői megvannak
+
+Az utolsó képernyő, az `OfferDetailScreen.js` (564 sor) leképezése.
+`OfferDetailPage` + `OfferDetailViewModel`: fénykép, mennyiség becsült
+értékkel, jelvények, helyszín, elérhetőségi idő, megjegyzés, a felajánló és a
+kiválasztott gyűjtő monogrammal és értékeléssel, jelentkezés, a saját
+jelentkezésem állapota, és üzenetküldés.
+
+**Három bejáratot kapott**, ahogy a régiben is: a Térkép kijelölt tűjén a
+"Részletek" gomb, a Gyűjtés lista kártyája alatt szintén, és a Felajánlás lap
+saját kártyáin. A Gyűjtés **térképi tűje** innentől a részletlapot nyitja, nem
+a rövid jelentkezési űrlapot - a tűn nincs mit olvasni, tehát ott a teljes lap
+a hasznos. A listaelem marad a gyors úton.
+
+**Ez fedte fel a 4. régi hibát** (lásd 5.2): a visszavont jelentkezés örökre
+kizárta az újrajelentkezést. A felület felkínálta a visszavonást, a szerver
+utána mégis "Request already exists"-tel válaszolt volna. Mivel az
+`(offer_id, collector_id)` páron egyedi index van, új sort nem lehet
+beszúrni - az API ezért a visszavont sort éleszti újra.
+
+Végigmérve, élő adaton (utána visszaállítva):
+
+| Állapot | Amit mutat |
+|---|---|
+| Saját, aktív felajánlás | nincs jelentkezés-doboz, nincs üzenet gomb |
+| Idegen, aktív, van függő jelentkezésem | "Elküldted az érdeklődésed…" + Visszavonás |
+| ugyanaz, visszavonás után | újra megjelenik a jelentkezési űrlap |
+| ugyanaz, újrajelentkezés után | **ugyanaz a sor** áll vissza függőre (14 db kérés maradt 14) |
+| Saját, lefoglalt felajánlás | Kiválasztott gyűjtő kártya + "Üzenet küldése" → chat |
+
+A monogram-képzés egy helyre került (`DomainLabels.Initials`): a régi app
+helyenként az első betűt vette, helyenként a teljes monogramot.
+
+**Két apró eltérés a régitől**, mindkettő szándékos:
+
+- **Üzenet a jelentkezéshez.** A régi részletlap `message: null`-lal küldte a
+  jelentkezést; nálunk itt is ott a szövegmező, ahogy a Gyűjtés lapon.
+- **Becsült visszaváltási érték.** A listakártyán eddig is szerepelt, a régi
+  részletlapon nem; itt is kiírjuk.
 
 ### 2026-08-14 — Settings, és két néma hiba a bejelentkezés körül
 

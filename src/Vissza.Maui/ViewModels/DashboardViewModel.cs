@@ -151,9 +151,21 @@ public sealed partial class DashboardViewModel(IServiceProvider services, AuthSe
         PinsChanged?.Invoke(this, pins);
     }
 
+    /// <summary>
+    /// A kiválasztott felajánlás azonosítója, ha a tű felajánlást jelöl.
+    /// Visszaváltó helyre nincs részletlap, ezért ott null.
+    /// </summary>
+    [ObservableProperty]
+    public partial int? SelectedOfferId { get; set; }
+
+    public bool CanOpenOffer => SelectedOfferId is not null;
+
+    partial void OnSelectedOfferIdChanged(int? value) => OnPropertyChanged(nameof(CanOpenOffer));
+
     public void Select(MapPin pin)
     {
         SelectionTitle = pin.Title;
+        SelectedOfferId = pin.Payload is OfferDto selected ? selected.Id : null;
 
         SelectionSubtitle = pin.Payload switch
         {
@@ -172,6 +184,19 @@ public sealed partial class DashboardViewModel(IServiceProvider services, AuthSe
 
     [RelayCommand]
     void ClearSelection() => HasSelection = false;
+
+    [RelayCommand]
+    async Task OpenOfferAsync()
+    {
+        if (SelectedOfferId is not { } id)
+            return;
+
+        // A panelt bezárjuk: visszatéréskor a térkép ne egy régi kijelöléssel
+        // fogadjon, ami közben már el is kelhetett.
+        HasSelection = false;
+
+        await Shell.Current.GoToAsync($"offer?offerId={id}");
+    }
 
     [RelayCommand]
     async Task SignOutAsync()

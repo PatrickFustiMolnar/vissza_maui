@@ -98,6 +98,19 @@ public sealed partial class GiveViewModel(
         ErrorMessage = null;
     }
 
+    /// <summary>
+    /// A saját felajánlás teljes lapja. A felajánlónak is hasznos: itt látja
+    /// a kiválasztott gyűjtőt az értékelésével együtt, és innen tud üzenni is.
+    /// </summary>
+    [RelayCommand]
+    static async Task OpenDetailAsync(OfferDto? offer)
+    {
+        if (offer is null)
+            return;
+
+        await Shell.Current.GoToAsync($"offer?offerId={offer.Id}");
+    }
+
     [RelayCommand]
     async Task SubmitAsync()
     {
