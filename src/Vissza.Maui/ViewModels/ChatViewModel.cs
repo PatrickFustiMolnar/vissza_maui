@@ -9,21 +9,24 @@ namespace Vissza.Maui.ViewModels;
 /// <summary>
 /// Egy beszélgetés. A ChatScreen.js leképezése.
 ///
-/// A frissítés időzítővel megy, ahogy a régi appban is. Ez ideiglenes:
-/// az ASP.NET Core-ral a SignalR gyakorlatilag ingyen van, és valós idejűvé
-/// tenné a beszélgetést - lásd MAUI_TERV.md 6.1.
+/// Élőben a SignalR hozza az üzeneteket, tehát a képernyő csak akkor mozdul,
+/// ha tényleg érkezett valami. A régi app (és a mi első változatunk is) öt
+/// másodpercenként kérdezte a szervert - az időzítő most tartaléknak marad
+/// arra az esetre, ha a hub nem érhető el.
 /// </summary>
-public sealed partial class ChatViewModel(IServiceProvider services, AuthService auth) : ViewModelBase
+public sealed partial class ChatViewModel(
+    IServiceProvider services, AuthService auth, ChatHubService hub) : ViewModelBase
 {
     /// <summary>
-    /// Öt másodperc. A régi app is ilyen nagyságrenddel kérdezett; sűrűbben
-    /// már a szervert terhelné anélkül, hogy érezhetően gyorsabb lenne.
+    /// A tartalék lekérdezés üteme. Ritkább, mint a régi öt másodperc: ez már
+    /// nem az elsődleges út, csak akkor fut, ha az élő kapcsolat nincs meg.
     /// </summary>
-    static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(5);
+    static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(10);
 
     IVisszaApi Api => services.GetRequiredService<IVisszaApi>();
 
     CancellationTokenSource? _polling;
+    bool _subscribed;
 
     public ObservableCollection<ChatMessageItem> Messages { get; } = [];
 
@@ -87,15 +90,91 @@ public sealed partial class ChatViewModel(IServiceProvider services, AuthService
             Messages.Add(new ChatMessageItem(message, message.SenderId == CurrentUserId));
     }
 
-    public void StartPolling()
+    // --- élő kapcsolat ---
+
+    /// <summary>A képernyő megnyitásakor fut: élő kapcsolat, vagy tartalék.</summary>
+    public async Task ListenAsync()
     {
+        if (!_subscribed)
+        {
+            hub.MessageReceived += OnHubMessage;
+            hub.ConnectionChanged += OnConnectionChanged;
+            _subscribed = true;
+        }
+
+        await hub.StartAsync();
+
+        ChooseTransport();
+    }
+
+    public void StopListening()
+    {
+        if (_subscribed)
+        {
+            hub.MessageReceived -= OnHubMessage;
+            hub.ConnectionChanged -= OnConnectionChanged;
+            _subscribed = false;
+        }
+
         StopPolling();
+    }
+
+    /// <summary>
+    /// Élő kapcsolattal nincs lekérdezés, nélküle van. A kettő sosem fut
+    /// egyszerre.
+    /// </summary>
+    void ChooseTransport()
+    {
+        if (hub.IsConnected)
+            StopPolling();
+        else
+            StartPolling();
+    }
+
+    void OnConnectionChanged(object? sender, EventArgs e) =>
+        MainThread.BeginInvokeOnMainThread(async () =>
+        {
+            ChooseTransport();
+
+            // Újracsatlakozás után lehet, hogy lemaradtunk üzenetekről: amíg
+            // nem volt kapcsolat, a hub nem tudta kézbesíteni őket.
+            if (hub.IsConnected)
+                await RefreshQuietlyAsync();
+        });
+
+    void OnHubMessage(object? sender, ChatMessageDto message)
+    {
+        // Csak ez a beszélgetés érdekel. Másik partnertől érkező üzenetet a
+        // beszélgetéslista kezel.
+        if (message.SenderId != PartnerId && message.ReceiverId != PartnerId)
+            return;
+
+        MainThread.BeginInvokeOnMainThread(async () =>
+        {
+            // A saját üzenetünket a küldés már betette; a hub a többi
+            // eszközünk miatt nekünk is elküldi.
+            if (Messages.Any(m => m.Id == message.Id))
+                return;
+
+            Messages.Add(new ChatMessageItem(message, message.SenderId == CurrentUserId));
+
+            if (message.ReceiverId == CurrentUserId)
+                await MarkIncomingReadAsync();
+        });
+    }
+
+    // --- tartalék lekérdezés ---
+
+    void StartPolling()
+    {
+        if (_polling is not null)
+            return;
 
         _polling = new CancellationTokenSource();
         _ = PollAsync(_polling.Token);
     }
 
-    public void StopPolling()
+    void StopPolling()
     {
         _polling?.Cancel();
         _polling?.Dispose();
@@ -113,7 +192,7 @@ public sealed partial class ChatViewModel(IServiceProvider services, AuthService
         }
         catch (OperationCanceledException)
         {
-            // A képernyő elhagyása - nem hiba.
+            // A képernyő elhagyása vagy az élő kapcsolat megjötte - nem hiba.
         }
     }
 
@@ -161,7 +240,10 @@ public sealed partial class ChatViewModel(IServiceProvider services, AuthService
                 Content = content
             });
 
-            Messages.Add(new ChatMessageItem(message, IsMine: true));
+            // Azonosító szerint nézzük: a hub ugyanezt az üzenetet nekünk is
+            // elküldi, és kétszer nem szabad megjelennie.
+            if (!Messages.Any(m => m.Id == message.Id))
+                Messages.Add(new ChatMessageItem(message, IsMine: true));
         });
 
         if (!sent)

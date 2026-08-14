@@ -9,9 +9,40 @@ namespace Vissza.Maui.ViewModels;
 /// <summary>
 /// Beszélgetéslista. A ConversationsScreen.js leképezése.
 /// </summary>
-public sealed partial class ConversationsViewModel(IServiceProvider services) : ViewModelBase
+public sealed partial class ConversationsViewModel(
+    IServiceProvider services, ChatHubService hub) : ViewModelBase
 {
     IVisszaApi Api => services.GetRequiredService<IVisszaApi>();
+
+    bool _subscribed;
+
+    /// <summary>
+    /// Élő frissítés: a lista a megnyitáskor amúgy is betölt, ez arra kell,
+    /// hogy nyitva hagyott listánál se kelljen visszalépni ahhoz, hogy egy új
+    /// üzenet és az olvasatlan szám megjelenjen.
+    /// </summary>
+    public async Task ListenAsync()
+    {
+        if (!_subscribed)
+        {
+            hub.MessageReceived += OnHubMessage;
+            _subscribed = true;
+        }
+
+        await hub.StartAsync();
+    }
+
+    public void StopListening()
+    {
+        if (!_subscribed)
+            return;
+
+        hub.MessageReceived -= OnHubMessage;
+        _subscribed = false;
+    }
+
+    void OnHubMessage(object? sender, ChatMessageDto message) =>
+        MainThread.BeginInvokeOnMainThread(async () => await LoadAsync());
 
     public ObservableCollection<ConversationDto> Conversations { get; } = [];
 

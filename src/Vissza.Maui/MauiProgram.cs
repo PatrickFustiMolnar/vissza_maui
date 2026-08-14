@@ -55,6 +55,10 @@ public static class MauiProgram
         builder.Services.AddSingleton<GeocodingService>();
         builder.Services.AddSingleton<PhotoService>();
 
+        // Egy kapcsolat az egész alkalmazásra: a beszélgetés és a lista is
+        // ugyanarra az eseményre iratkozik fel.
+        builder.Services.AddSingleton<ChatHubService>();
+
 #if DEBUG
         builder.Logging.AddDebug();
 #endif

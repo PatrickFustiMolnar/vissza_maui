@@ -34,14 +34,14 @@ public partial class ChatPage : ContentPage
         base.OnAppearing();
 
         await _viewModel.LoadAsync();
-        _viewModel.StartPolling();
+        await _viewModel.ListenAsync();
     }
 
-    // A lekérdezés leáll, amint elhagyjuk a képernyőt - különben a háttérben
-    // minden megnyitott beszélgetés tovább kérdezné a szervert.
+    // A képernyő elhagyásakor leiratkozunk. Az élő kapcsolat maga megmarad -
+    // a beszélgetéslistának is kell -, csak ez a nézet nem hallgatja tovább.
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
-        _viewModel.StopPolling();
+        _viewModel.StopListening();
     }
 }

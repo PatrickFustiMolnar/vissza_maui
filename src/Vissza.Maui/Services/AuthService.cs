@@ -90,9 +90,14 @@ public sealed class AuthService(IServiceProvider services)
         _token = null;
 
         SecureStorage.Default.Remove(TokenKey);
-        SetUser(null);
 
-        await Task.CompletedTask;
+        // Az élő chat-kapcsolat a régi tokennel épült; a következő
+        // felhasználó üzeneteit nem kaphatja meg. A feloldás itt, hívás
+        // közben történik - a ChatHubService maga is ezt a szolgáltatást
+        // használja, tehát konstruktorban körkörös lenne.
+        await services.GetRequiredService<ChatHubService>().StopAsync();
+
+        SetUser(null);
     }
 
     /// <summary>A profil frissítése után az eltárolt felhasználót is frissítjük.</summary>

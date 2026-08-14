@@ -18,6 +18,14 @@ public partial class ConversationsPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+
         await _viewModel.LoadAsync();
+        await _viewModel.ListenAsync();
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        _viewModel.StopListening();
     }
 }

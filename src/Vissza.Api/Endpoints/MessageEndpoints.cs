@@ -1,9 +1,11 @@
 using System.Linq.Expressions;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Vissza.Api.Data;
 using Vissza.Api.Entities;
+using Vissza.Api.Hubs;
 using Vissza.Api.Services;
 using Vissza.Shared.Dtos;
 
@@ -72,6 +74,8 @@ public static class MessageEndpoints
         SendMessageRequest request,
         ClaimsPrincipal principal,
         VisszaDbContext db,
+        IHubContext<ChatHub> chat,
+        ILogger<ChatHub> logger,
         CancellationToken ct)
     {
         if (request.ReceiverId is null || string.IsNullOrWhiteSpace(request.Content))
@@ -93,6 +97,23 @@ public static class MessageEndpoints
             .Where(m => m.Id == entity.Id)
             .Select(ToDto)
             .FirstAsync(ct);
+
+        // Mindkét félnek megy: a küldőnek azért, hogy a többi eszközén is
+        // megjelenjen. A kliens azonosító szerint szűri ki, amit már betett -
+        // így a küldő készülékén nem duplázódik.
+        //
+        // Az értesítés nem kritikus: ha a hub nem elérhető, az üzenet akkor is
+        // elmentődött, és a kliens a következő lekérdezésnél megtalálja.
+        try
+        {
+            await chat.Clients
+                .Users([entity.SenderId.ToString(), entity.ReceiverId.ToString()])
+                .SendAsync(ChatHub.MessageReceived, dto, ct);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Az üzenet szórása nem sikerült (id: {MessageId})", entity.Id);
+        }
 
         return Results.Created($"/api/messages/{entity.Id}", dto);
     }

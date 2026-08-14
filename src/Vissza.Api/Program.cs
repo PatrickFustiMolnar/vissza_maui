@@ -2,10 +2,12 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Vissza.Api.Data;
 using Vissza.Api.Endpoints;
+using Vissza.Api.Hubs;
 using Vissza.Api.Middleware;
 using Vissza.Api.RateLimiting;
 using Vissza.Api.Services;
@@ -71,6 +73,23 @@ builder.Services
 
         options.Events = new JwtBearerEvents
         {
+            // A WebSocket kézfogás nem tud Authorization fejlécet küldeni,
+            // ezért a SignalR kliens a query stringbe teszi a tokent. Csak a
+            // hub útvonalán fogadjuk el így - máshol a fejléc marad az
+            // egyetlen mód, hogy a token ne szivárogjon a naplókba.
+            OnMessageReceived = context =>
+            {
+                var token = context.Request.Query["access_token"];
+
+                if (!string.IsNullOrEmpty(token)
+                    && context.Request.Path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = token;
+                }
+
+                return Task.CompletedTask;
+            },
+
             // A régi backend hiányzó tokenre 401-et, érvénytelenre 403-at
             // adott. A kliens erre épül, ezért itt is így válaszolunk.
             OnChallenge = async context =>
@@ -90,6 +109,18 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
+
+// A hub ugyanazt a JSON-alakot használja, mint a REST végpontok: a kliens
+// ugyanazokat a DTO-kat kapja, ugyanazzal a névpolitikával.
+builder.Services
+    .AddSignalR()
+    .AddJsonProtocol(options =>
+    {
+        options.PayloadSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+        options.PayloadSerializerOptions.Converters.Add(new DomainEnumConverter());
+    });
+
+builder.Services.AddSingleton<IUserIdProvider, ClaimUserIdProvider>();
 
 builder.Services.AddRateLimiter(AuthRateLimiting.Configure);
 
@@ -147,5 +178,7 @@ app.MapMessageEndpoints();
 app.MapUserEndpoints();
 app.MapReturnLocationEndpoints();
 app.MapUploadEndpoints();
+
+app.MapHub<ChatHub>("/hubs/chat");
 
 app.Run();

@@ -430,14 +430,40 @@ Támogató rétegek:
 
 ### 6.1 Amit érdemes útközben feljavítani
 
-- **Chat polling → SignalR.** A `ChatViewModel` egyelőre időzítővel kérdez
-  (5 másodperc), ahogy a régi app is. ASP.NET Core-ral a SignalR
-  gyakorlatilag ingyen van, és valós idejűvé tenné a beszélgetést.
-  A lekérdezés a képernyő elhagyásakor leáll, tehát nem halmozódik.
+- **Chat polling → SignalR.** *(kész)* A régi app öt másodpercenként kérdezte
+  a szervert; most a `ChatHub` értesít, és a képernyő csak akkor mozdul, ha
+  tényleg érkezett valami. A lekérdezés tartaléknak megmaradt, ritkábban (10
+  másodperc), és csak akkor fut, ha az élő kapcsolat nincs meg.
 - **Push értesítés.** A `users.notifications_enabled` és `notification_radius`
-  oszlopok már megvannak, de nincs mögöttük tényleges értesítés.
+  oszlopok már megvannak, de nincs mögöttük tényleges értesítés. Ez már nem a
+  migráció része - és a SignalR nem helyettesíti: az csak addig szól, amíg az
+  app fut.
 
-Egyik sem az 1-4. fázis része — a migráció után jönnek.
+### 6.2 Az élő beszélgetés felépítése
+
+A hubnak **egyetlen hívható metódusa sincs**: a kliens csak fogad, az írás
+útja marad a `POST /api/messages`. Az ellenőrzés, a mentés és a hibakezelés
+így egy helyen van; egy hub-metódussal mindez meg lenne duplázva.
+
+```
+Kliens ──POST /api/messages──> API ──> adatbázis
+                                │
+                                └─IHubContext──> ChatHub ──> mindkét fél
+```
+
+Amit a felépítés eldöntött:
+
+- **Mindkét félnek szól, nem csak a címzettnek.** Így a küldő többi eszközén
+  is megjelenik. A saját készülék azonosító szerint szűri ki, amit a küldés
+  már betett - kétszer nem jelenhet meg.
+- **A token a query stringben megy.** A WebSocket kézfogás nem tud
+  `Authorization` fejlécet küldeni. A szerver ezt **csak a `/hubs` útvonalon**
+  fogadja el, hogy a token máshol ne szivárogjon a naplókba.
+- **Saját `IUserIdProvider`.** A SignalR alapból a `ClaimTypes.NameIdentifier`
+  claimet nézi, a mi tokenünkben viszont `id` van (a régi backendtől örökölve).
+  E nélkül a `Clients.User(...)` sosem találna címzettet.
+- **A szórás nem kritikus.** Ha elbukik, az üzenet akkor is elmentődött, és a
+  kliens a következő lekérdezésnél megtalálja - ezért csak naplózzuk.
 
 ---
 
@@ -680,11 +706,13 @@ Az 1. fázis megkezdéséhez el kell dőlnie, hol fut majd az API — lásd alá
 Login, Register, Dashboard, Give, Collect, Conversations, Chat,
 TransactionDetail, Rating, Settings, OfferDetail.
 
-Ami a fázison belül még hátravan:
+A fázison belüli maradékok (fénykép, idősáv, SignalR) is megvannak, tehát
+**a 3. fázis kész**.
 
-- **Chat: SignalR a lekérdezés helyett** (6.1).
-
-Az API hosztolása továbbra is nyitott, de csak a 4. fázist blokkolja - lásd 9.
+A következő a **4. fázis: kiadás** - és ahhoz el kell dőlnie, hol fusson az
+API (lásd 9. és 1.6). A fejlesztői beállítás (`http://localhost:5199`,
+`NSAllowsLocalNetworking`) csak a szimulátorig visz; élesben HTTPS kell, és a
+SignalR miatt olyan hoszt, ami a **WebSocketet is átengedi**.
 
 Munkakönyvtár: `/Users/fustimolnarpatrick/vissza_maui`.
 A régi `Desktop/vissza` projekt innentől **csak olvasásra** szolgál referenciaként.
@@ -692,6 +720,35 @@ A régi `Desktop/vissza` projekt innentől **csak olvasásra** szolgál referenc
 ---
 
 ## 11. Módosítási napló
+
+### 2026-08-14 — élő beszélgetés SignalR-rel; a 3. fázis kész
+
+A régi app öt másodpercenként kérdezte a szervert, akkor is, ha semmi nem
+történt. Most a `ChatHub` értesít. A felépítés a 6.2-ben van; itt az, amit a
+mérés mutatott.
+
+**A lekérdezés nem tűnt el, tartalék lett.** Tíz másodperc, és csak akkor fut,
+ha az élő kapcsolat nincs meg. A kettő sosem megy egyszerre.
+
+**Végigmérve, élő adaton** (a teszt-üzenetek utána törölve). A másik fél
+szerepéhez a saját fejlesztői kulcsommal állítottam ki egy tokent Nagy Mária
+nevében - a demo adatbázisban csak Kovács János tud bejelentkezni, márpedig
+egy beszélgetéshez két fél kell:
+
+| Próba | Eredmény |
+|---|---|
+| Üzenet a másik féltől, nyitott beszélgetésnél | **azonnal** megjelent, jóval a 10 másodperces tartalék előtt |
+| ugyanaz, olvasottság | a sor `read = 1` lett, tehát a hub kezelője futott |
+| Saját üzenet küldése | **egyszer** jelent meg - a hub visszhangját azonosító szerint szűrtük |
+| API leállítva, úgy megnyitott beszélgetés | a kapcsolat nem jött létre, a lekérdezés vette át |
+| API vissza, üzenet a másik féltől | ~10 másodpercen belül megjött, **lekérdezésen** |
+| Beszélgetéslista nyitva, új üzenet | előnézet és olvasatlan jelvény magától frissült |
+
+Az utolsó előtti sor egyben az újracsatlakozást is igazolja: a lista
+megnyitásakor a szolgáltatás újra megpróbálta a kapcsolatot, és sikerült.
+
+**Amit a SignalR nem old meg:** csak addig szól, amíg az app fut. A háttérben
+érkező üzenethez push kell - az továbbra is a migráción kívüli teendő (6.1).
 
 ### 2026-08-14 — elérhetőségi idősáv, és egy időzóna-hiba, ami eddig rejtve volt
 
