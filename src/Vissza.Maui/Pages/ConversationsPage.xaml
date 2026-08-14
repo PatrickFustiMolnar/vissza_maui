@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:dtos="clr-namespace:Vissza.Shared.Dtos;assembly=Vissza.Shared"
+             xmlns:vm="clr-namespace:Vissza.Maui.ViewModels"
+             x:Class="Vissza.Maui.Pages.ConversationsPage"
+             x:DataType="vm:ConversationsViewModel"
+             Title="Üzenetek">
+
+    <Grid RowDefinitions="Auto,*">
+
+        <Label Text="{Binding UnreadCount, StringFormat='{0} olvasatlan üzenet'}"
+               IsVisible="{Binding HasUnread}"
+               Margin="16,12"
+               TextColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
+
+        <RefreshView Grid.Row="1" IsRefreshing="{Binding IsBusy}" Command="{Binding LoadCommand}">
+            <CollectionView ItemsSource="{Binding Conversations}">
+
+                <CollectionView.EmptyView>
+                    <Label Text="Még nincs beszélgetésed."
+                           Margin="16"
+                           HorizontalOptions="Center"
+                           Style="{StaticResource SecondaryLabel}" />
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="dtos:ConversationDto">
+                        <Border Style="{StaticResource CardBorder}" Margin="16,0,16,10">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding BindingContext.OpenCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}}"
+                                    CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                                <Label Text="{Binding Partner.Name}" FontAttributes="Bold" />
+
+                                <Border Grid.Column="1"
+                                        IsVisible="{Binding UnreadCount}"
+                                        BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}"
+                                        StrokeThickness="0"
+                                        Padding="8,2">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="10" />
+                                    </Border.StrokeShape>
+                                    <Label Text="{Binding UnreadCount}"
+                                           TextColor="{StaticResource TextOnAccent}"
+                                           FontSize="{StaticResource FontSizeCaption}" />
+                                </Border>
+
+                                <Label Grid.Row="1" Grid.ColumnSpan="2"
+                                       Text="{Binding LastMessage.Content}"
+                                       LineBreakMode="TailTruncation"
+                                       MaxLines="1"
+                                       Style="{StaticResource SecondaryLabel}" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+            </CollectionView>
+        </RefreshView>
+
+    </Grid>
+
+</ContentPage>

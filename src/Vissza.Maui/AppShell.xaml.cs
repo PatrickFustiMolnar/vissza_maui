@@ -6,7 +6,14 @@ public partial class AppShell : Shell
 {
     bool _sessionChecked;
 
-    public AppShell() => InitializeComponent();
+    public AppShell()
+    {
+        InitializeComponent();
+
+        // A chat nem lap, hanem a lapokról nyíló részletképernyő, ezért
+        // külön regisztrált útvonal.
+        Routing.RegisterRoute("chat", typeof(Pages.ChatPage));
+    }
 
     /// <summary>
     /// Az AuthService feloldása szándékosan itt történik, nem konstruktor-

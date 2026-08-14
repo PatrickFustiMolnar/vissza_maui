@@ -32,7 +32,8 @@ public static class MessageEndpoints
         CancellationToken ct,
         [FromQuery(Name = "offer_id")] int? offerId = null,
         [FromQuery(Name = "sender_id")] int? senderId = null,
-        [FromQuery(Name = "receiver_id")] int? receiverId = null)
+        [FromQuery(Name = "receiver_id")] int? receiverId = null,
+        [FromQuery(Name = "partner_id")] int? partnerId = null)
     {
         var userId = principal.GetUserId();
 
@@ -49,6 +50,17 @@ public static class MessageEndpoints
 
         if (receiverId is not null)
             query = query.Where(m => m.ReceiverId == receiverId);
+
+        // Egy beszélgetés a partnerrel, mindkét irányban. A sender_id és a
+        // receiver_id ÉS-sel kapcsolódik, ezért azokkal ez nem fejezhető ki -
+        // a régi kliens emiatt töltötte le a teljes postafiókot és szűrt
+        // kliensoldalon, másodpercenként ismételve.
+        if (partnerId is not null)
+        {
+            query = query.Where(m =>
+                (m.SenderId == userId && m.ReceiverId == partnerId)
+                || (m.SenderId == partnerId && m.ReceiverId == userId));
+        }
 
         return Results.Ok(await query
             .OrderBy(m => m.CreatedAt)

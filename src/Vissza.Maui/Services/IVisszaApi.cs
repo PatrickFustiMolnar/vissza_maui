@@ -106,7 +106,8 @@ public interface IVisszaApi
     Task<IReadOnlyList<ChatMessageDto>> GetMessagesAsync(
         [AliasAs("offer_id")] int? offerId = null,
         [AliasAs("sender_id")] int? senderId = null,
-        [AliasAs("receiver_id")] int? receiverId = null);
+        [AliasAs("receiver_id")] int? receiverId = null,
+        [AliasAs("partner_id")] int? partnerId = null);
 
     [Post("/api/messages")]
     Task<ChatMessageDto> SendMessageAsync(SendMessageRequest request);

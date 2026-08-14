@@ -28,6 +28,9 @@
         <ShellContent Route="collect"
                       Title="Gyűjtés"
                       ContentTemplate="{DataTemplate pages:CollectPage}" />
+        <ShellContent Route="messages"
+                      Title="Üzenetek"
+                      ContentTemplate="{DataTemplate pages:ConversationsPage}" />
         <ShellContent Route="give"
                       Title="Felajánlás"
                       ContentTemplate="{DataTemplate pages:GivePage}" />

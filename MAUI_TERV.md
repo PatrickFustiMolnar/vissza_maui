@@ -409,9 +409,10 @@ Támogató rétegek:
 
 ### 6.1 Amit érdemes útközben feljavítani
 
-- **Chat polling → SignalR.** A jelenlegi `ChatScreen` `setInterval`-lal kérdezi
-  le az üzeneteket. ASP.NET Core-ral a SignalR gyakorlatilag ingyen van, és
-  valós idejűvé teszi a beszélgetést.
+- **Chat polling → SignalR.** A `ChatViewModel` egyelőre időzítővel kérdez
+  (5 másodperc), ahogy a régi app is. ASP.NET Core-ral a SignalR
+  gyakorlatilag ingyen van, és valós idejűvé tenné a beszélgetést.
+  A lekérdezés a képernyő elhagyásakor leáll, tehát nem halmozódik.
 - **Push értesítés.** A `users.notifications_enabled` és `notification_radius`
   oszlopok már megvannak, de nincs mögöttük tényleges értesítés.
 

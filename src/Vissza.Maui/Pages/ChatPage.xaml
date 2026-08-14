@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Vissza.Maui.ViewModels"
+             x:Class="Vissza.Maui.Pages.ChatPage"
+             x:DataType="vm:ChatViewModel"
+             Title="{Binding PartnerName}">
+
+    <Grid RowDefinitions="*,Auto">
+
+        <CollectionView x:Name="MessageList" ItemsSource="{Binding Messages}" Margin="12,8">
+            <CollectionView.EmptyView>
+                <Label Text="Írj neki elsőként."
+                       Margin="16"
+                       HorizontalOptions="Center"
+                       Style="{StaticResource SecondaryLabel}" />
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:ChatMessageItem">
+                    <!--
+                        A buborék oldalát és színét a küldő dönti el. A
+                        HorizontalOptions triggerrel vált, hogy a saját
+                        üzenet jobbra, a partneré balra kerüljön.
+                    -->
+                    <Border x:Name="Bubble"
+                            Margin="0,4"
+                            Padding="12,8"
+                            StrokeThickness="0"
+                            MaximumWidthRequest="280"
+                            HorizontalOptions="Start"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceMutedLight}, Dark={StaticResource SurfaceMutedDark}}">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="14" />
+                        </Border.StrokeShape>
+
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border"
+                                         Binding="{Binding IsMine}"
+                                         Value="True">
+                                <Setter Property="HorizontalOptions" Value="End" />
+                                <Setter Property="BackgroundColor"
+                                        Value="{AppThemeBinding Light={StaticResource PrimarySubtleLight}, Dark={StaticResource PrimarySubtleDark}}" />
+                            </DataTrigger>
+                        </Border.Triggers>
+
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="{Binding Content}" />
+                            <Label Text="{Binding CreatedAt, StringFormat='{0:HH:mm}'}"
+                                   HorizontalOptions="End"
+                                   Style="{StaticResource SecondaryLabel}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Padding="12" ColumnSpacing="8">
+            <Entry Placeholder="Üzenet…" Text="{Binding Draft}" ReturnType="Send" />
+            <Button Grid.Column="1"
+                    Text="Küldés"
+                    Command="{Binding SendCommand}"
+                    Padding="16,10"
+                    FontSize="{StaticResource FontSizeBody}" />
+        </Grid>
+
+    </Grid>
+
+</ContentPage>
