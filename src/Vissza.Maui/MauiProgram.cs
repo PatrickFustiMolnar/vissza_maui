@@ -37,7 +37,7 @@ public static class MauiProgram
         // A Refit szerializálója pontosan ugyanazokkal a beállításokkal megy,
         // mint a szerveré - lásd ApiJson.
         builder.Services
-            .AddRefitClient<IVisszaApi>(new RefitSettings
+            .AddRefitGeneratedClient<IVisszaApi>(new RefitSettings
             {
                 ContentSerializer = new SystemTextJsonContentSerializer(ApiJson.Options)
             })

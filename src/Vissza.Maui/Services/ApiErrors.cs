@@ -16,7 +16,15 @@ public static class ApiErrors
         ApiException api => FromApi(api),
         HttpRequestException => "Nem sikerült elérni a szervert. Ellenőrizd a hálózati kapcsolatot.",
         TaskCanceledException => "A kérés túllépte az időkorlátot.",
+
+        // Fejlesztői módban a kivétel típusa és üzenete is látszik. Enélkül
+        // minden ismeretlen hiba ugyanarra az egy mondatra fut, és a
+        // hibakeresés a naplóban sem talál semmit, ha a kérés el sem indult.
+#if DEBUG
+        _ => $"{exception.GetType().Name}: {exception.Message}"
+#else
         _ => "Váratlan hiba történt."
+#endif
     };
 
     static string FromApi(ApiException exception)

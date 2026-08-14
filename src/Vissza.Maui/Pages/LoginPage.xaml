@@ -38,8 +38,7 @@
                     Command="{Binding SignInCommand}"
                     IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
 
-            <!-- Label + koppintásfigyelő, nem átlátszó hátterű Button: az
-                 utóbbi ugyan kirajzolódott, de a parancsa nem sült el. -->
+            <!-- Szöveges linkhez Label + koppintásfigyelő való, nem Button. -->
             <Label Text="Nincs még fiókod? Regisztrálj"
                    HorizontalOptions="Center"
                    Padding="12"

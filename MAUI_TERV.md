@@ -662,6 +662,45 @@ A régi `Desktop/vissza` projekt innentől **csak olvasásra** szolgál referenc
 
 ## 11. Módosítási napló
 
+### 2026-08-14 — a bejelentkezés végigmegy
+
+A 2. és 3. fázis első köre működik: bejelentkezés, navigáció, listázás.
+
+**A hiba nem ott volt, ahol kerestem.** Két külön dolog:
+
+**1. Rossz koordináta-átváltás a teszteléskor (az én hibám, nem a kódé).**
+
+A szimulátor panelje 402×874 pontot jelent, a képernyőkép viszont 919×1920
+képpont. A vízszintes arány 2,286, a függőleges 2,197 - **a kettő nem
+egyezik**. Végig a függőlegessel számoltam, így minden koppintásom kb. 24
+ponttal a cél alatt landolt. Ezért tűnt úgy, hogy a linkek nem reagálnak.
+A helyes átváltás a **szélesség** aránya.
+
+Ez félrevitte a hibakeresést: azt jelentettem, hogy a navigáció nem működik,
+holott végig működött.
+
+**2. Refit: a generált klienst külön kell regisztrálni.**
+
+Két lépés kellett:
+
+- **Közvetlen `Refit` csomaghivatkozás.** A forráskód-generátorok nem
+  öröklődnek tranzitív függőségen keresztül, ezért a `Refit.HttpClientFactory`
+  önmagában nem hozza a generátort. Nélküle a Refit futásidejű reflexióra
+  esik vissza, amit az iOS nem enged.
+- **`AddRefitGeneratedClient` az `AddRefitClient` helyett.** Az utóbbi a
+  reflexiós utat használja, és futásidőben `NotSupportedException`-t dob:
+  *"This interface needs the reflection request builder, which is not
+  installed."*
+
+**Ellenőrizve, éles adatbázison:** bejelentkezés `kovacs.janos@example.com`
+fiókkal, átnavigálás a listára, és a `OfferCardView` renderelése - jelvények
+(Üveg/PET, Aktív), mennyiség, cím, felajánló neve csillagos értékeléssel,
+becsült érték. Minden sötét módban, a portolt palettával.
+
+**Tanulság a további képernyőkhöz:** az ismeretlen kivételek fejlesztői
+módban most kiírják a típusukat és üzenetüket (`ApiErrors`). Enélkül ez a
+Refit-hiba egy "Váratlan hiba történt." mondat mögött maradt volna.
+
 ### 2026-08-13 — az indítási összeomlás megoldva
 
 Az app elindul. A hiba **két, egymástól független ok** volt, mindkettő
