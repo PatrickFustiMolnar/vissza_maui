@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Refit;
+using SkiaSharp.Views.Maui.Controls.Hosting;
 using Vissza.Maui.Pages;
 using Vissza.Maui.Services;
 using Vissza.Maui.ViewModels;
@@ -25,6 +26,8 @@ public static class MauiProgram
 
         builder
             .UseMauiApp<App>()
+            // A Mapsui SkiaSharp vászonra rajzol; e nélkül a térkép üres.
+            .UseSkiaSharp()
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -51,7 +54,7 @@ public static class MauiProgram
 
         builder.Services.AddTransient<LoginViewModel>();
         builder.Services.AddTransient<RegisterViewModel>();
-        builder.Services.AddTransient<HomeViewModel>();
+        builder.Services.AddTransient<DashboardViewModel>();
 
 #if DEBUG
         builder.Logging.AddDebug();

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:Vissza.Maui.Controls"
+             xmlns:vm="clr-namespace:Vissza.Maui.ViewModels"
+             x:Class="Vissza.Maui.Pages.DashboardPage"
+             x:DataType="vm:DashboardViewModel"
+             Title="Térkép">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Kijelentkezés" Command="{Binding SignOutCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <Grid>
+
+        <controls:VisszaMapView x:Name="MapView" />
+
+        <!-- Üdvözlés és szűrők a térkép fölött -->
+        <Border Style="{StaticResource CardBorder}"
+                Margin="12"
+                Padding="12"
+                VerticalOptions="Start">
+            <VerticalStackLayout Spacing="8">
+                <Label Text="{Binding Greeting}" FontSize="{StaticResource FontSizeSubtitle}" />
+
+                <HorizontalStackLayout Spacing="16">
+                    <HorizontalStackLayout Spacing="6">
+                        <Switch IsToggled="{Binding ShowOffers}"
+                                OnColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
+                        <Label Text="Felajánlások" VerticalOptions="Center" Style="{StaticResource SecondaryLabel}" />
+                    </HorizontalStackLayout>
+
+                    <HorizontalStackLayout Spacing="6">
+                        <Switch IsToggled="{Binding ShowReturnLocations}"
+                                OnColor="{AppThemeBinding Light={StaticResource WarningLight}, Dark={StaticResource WarningDark}}" />
+                        <Label Text="Visszaváltók" VerticalOptions="Center" Style="{StaticResource SecondaryLabel}" />
+                    </HorizontalStackLayout>
+                </HorizontalStackLayout>
+
+                <Label Text="{Binding ErrorMessage}"
+                       IsVisible="{Binding HasError}"
+                       TextColor="{AppThemeBinding Light={StaticResource ErrorLight}, Dark={StaticResource ErrorDark}}"
+                       FontSize="{StaticResource FontSizeCaption}" />
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- A kiválasztott tű részletei -->
+        <Border Style="{StaticResource CardBorder}"
+                IsVisible="{Binding HasSelection}"
+                Margin="12,0,12,12"
+                VerticalOptions="End">
+            <VerticalStackLayout Spacing="6">
+                <Label Text="{Binding SelectionTitle}"
+                       FontSize="{StaticResource FontSizeSubtitle}"
+                       FontAttributes="Bold" />
+                <Label Text="{Binding SelectionSubtitle}" Style="{StaticResource SecondaryLabel}" />
+                <Button Text="Bezár"
+                        Command="{Binding ClearSelectionCommand}"
+                        HorizontalOptions="Start"
+                        Padding="12,6"
+                        Margin="0,6,0,0"
+                        FontSize="{StaticResource FontSizeCaption}" />
+            </VerticalStackLayout>
+        </Border>
+
+        <ActivityIndicator IsRunning="{Binding IsBusy}"
+                           IsVisible="{Binding IsBusy}"
+                           VerticalOptions="Center"
+                           HorizontalOptions="Center" />
+
+    </Grid>
+
+</ContentPage>

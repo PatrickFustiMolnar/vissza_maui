@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:mapsui="clr-namespace:Mapsui.UI.Maui;assembly=Mapsui.UI.Maui"
+             x:Class="Vissza.Maui.Controls.VisszaMapView">
+
+    <!--
+        A térkép, OSM csempékkel és saját tűkkel. A Give és a Collect
+        képernyő is ezt használja majd - a marker- és vetítési logika
+        egy helyen van.
+    -->
+
+    <Grid>
+        <mapsui:MapControl x:Name="Map" />
+
+        <!--
+            Forrásmegjelölés: a Mapsui saját attribúciós widgetet rajzol a
+            csemperéteghez, ezért itt nincs külön felirat. Egy sajáttal
+            duplán jelenne meg.
+        -->
+    </Grid>
+
+</ContentView>

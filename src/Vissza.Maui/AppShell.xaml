@@ -22,7 +22,7 @@
                   ContentTemplate="{DataTemplate pages:RegisterPage}" />
 
     <ShellContent Route="home"
-                  Title="Felajánlások"
-                  ContentTemplate="{DataTemplate pages:HomePage}" />
+                  Title="Térkép"
+                  ContentTemplate="{DataTemplate pages:DashboardPage}" />
 
 </Shell>
