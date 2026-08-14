@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Vissza.Maui.ViewModels"
+             x:Class="Vissza.Maui.Pages.RegisterPage"
+             x:DataType="vm:RegisterViewModel"
+             Title="Regisztráció"
+             Shell.NavBarIsVisible="False">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="14">
+
+            <Label Text="Fiók létrehozása"
+                   Style="{StaticResource HeadingLabel}"
+                   HorizontalOptions="Center"
+                   Margin="0,32,0,0" />
+
+            <Label Text="A csillaggal jelölt mezők kötelezők"
+                   Style="{StaticResource SecondaryLabel}"
+                   HorizontalOptions="Center"
+                   Margin="0,0,0,8" />
+
+            <Entry Placeholder="Név *"
+                   Text="{Binding Name}"
+                   IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
+
+            <Entry Placeholder="E-mail *"
+                   Text="{Binding Email}"
+                   Keyboard="Email"
+                   IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
+
+            <Entry Placeholder="Telefonszám"
+                   Text="{Binding Phone}"
+                   Keyboard="Telephone"
+                   IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
+
+            <Entry Placeholder="Jelszó *"
+                   Text="{Binding Password}"
+                   IsPassword="True"
+                   IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
+
+            <Entry Placeholder="Jelszó megerősítése *"
+                   Text="{Binding ConfirmPassword}"
+                   IsPassword="True"
+                   IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
+
+            <Label Text="Hogyan használnád?"
+                   Style="{StaticResource SecondaryLabel}"
+                   Margin="0,8,0,0" />
+
+            <Picker ItemsSource="{Binding RoleOptions}"
+                    SelectedIndex="{Binding SelectedRoleIndex}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}"
+                    TextColor="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}" />
+
+            <Label Text="{Binding ErrorMessage}"
+                   IsVisible="{Binding HasError}"
+                   TextColor="{AppThemeBinding Light={StaticResource ErrorLight}, Dark={StaticResource ErrorDark}}"
+                   FontSize="{StaticResource FontSizeCaption}" />
+
+            <Button Text="Regisztráció"
+                    Command="{Binding RegisterCommand}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}"
+                    Margin="0,8,0,0" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}"
+                               HorizontalOptions="Center" />
+
+            <Button Text="Van már fiókod? Jelentkezz be"
+                    Command="{Binding GoToSignInCommand}"
+                    BackgroundColor="Transparent"
+                    TextColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}"
+                    FontSize="{StaticResource FontSizeBody}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

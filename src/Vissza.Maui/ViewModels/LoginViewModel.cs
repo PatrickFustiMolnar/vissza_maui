@@ -31,4 +31,7 @@ public sealed partial class LoginViewModel(AuthService auth) : ViewModelBase
 
         await Shell.Current.GoToAsync("//home");
     }
+
+    [RelayCommand]
+    static Task GoToRegisterAsync() => Shell.Current.GoToAsync("//register");
 }

@@ -49,11 +49,8 @@ public static class MauiProgram
             .AddHttpMessageHandler<AuthTokenHandler>();
 
 
-        // Transient, NEM singleton: a Shell egy konkrét ablakhoz kötődik.
-        // Singletonként ugyanaz a példány kerülne egy újraépülő jelenet
-        // második ablakához is, és a UIKit natívan összeomlik tőle
-        // (SIGSEGV a UIWindowScene trait-felépítésében).
         builder.Services.AddTransient<LoginViewModel>();
+        builder.Services.AddTransient<RegisterViewModel>();
         builder.Services.AddTransient<HomeViewModel>();
 
 #if DEBUG

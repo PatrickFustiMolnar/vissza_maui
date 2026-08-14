@@ -18,6 +18,9 @@
                   ContentTemplate="{DataTemplate pages:LoginPage}"
                   Shell.FlyoutBehavior="Disabled" />
 
+    <ShellContent Route="register"
+                  ContentTemplate="{DataTemplate pages:RegisterPage}" />
+
     <ShellContent Route="home"
                   Title="Felajánlások"
                   ContentTemplate="{DataTemplate pages:HomePage}" />
