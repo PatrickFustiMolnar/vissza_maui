@@ -21,8 +21,13 @@
     <ShellContent Route="register"
                   ContentTemplate="{DataTemplate pages:RegisterPage}" />
 
-    <ShellContent Route="home"
-                  Title="Térkép"
-                  ContentTemplate="{DataTemplate pages:DashboardPage}" />
+    <TabBar Route="home">
+        <ShellContent Route="dashboard"
+                      Title="Térkép"
+                      ContentTemplate="{DataTemplate pages:DashboardPage}" />
+        <ShellContent Route="give"
+                      Title="Felajánlás"
+                      ContentTemplate="{DataTemplate pages:GivePage}" />
+    </TabBar>
 
 </Shell>

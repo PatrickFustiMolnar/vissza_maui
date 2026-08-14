@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:Vissza.Maui.Controls"
+             xmlns:dtos="clr-namespace:Vissza.Shared.Dtos;assembly=Vissza.Shared"
+             xmlns:vm="clr-namespace:Vissza.Maui.ViewModels"
+             x:Class="Vissza.Maui.Pages.GivePage"
+             x:DataType="vm:GiveViewModel"
+             Title="Felajánlás">
+
+    <Grid RowDefinitions="Auto,Auto,*">
+
+        <Grid ColumnDefinitions="*,Auto" Padding="16,12">
+            <Picker ItemsSource="{Binding StatusOptions}"
+                    SelectedIndex="{Binding SelectedStatusIndex}" />
+            <Button Grid.Column="1"
+                    Text="Új felajánlás"
+                    Command="{Binding ToggleFormCommand}"
+                    Padding="14,8"
+                    FontSize="{StaticResource FontSizeBody}" />
+        </Grid>
+
+        <Label Grid.Row="1"
+               Text="{Binding ErrorMessage}"
+               IsVisible="{Binding HasError}"
+               Margin="16,0,16,8"
+               TextColor="{AppThemeBinding Light={StaticResource ErrorLight}, Dark={StaticResource ErrorDark}}"
+               FontSize="{StaticResource FontSizeCaption}" />
+
+        <ScrollView Grid.Row="2">
+            <VerticalStackLayout>
+
+                <!-- Új felajánlás űrlapja -->
+                <Border Style="{StaticResource CardBorder}"
+                        IsVisible="{Binding IsFormVisible}"
+                        Margin="16,0,16,16">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Új felajánlás" FontSize="{StaticResource FontSizeSubtitle}" FontAttributes="Bold" />
+
+                        <Entry Placeholder="Mennyiség (db) *" Text="{Binding Quantity}" Keyboard="Numeric" />
+
+                        <Picker ItemsSource="{Binding BottleTypeOptions}"
+                                SelectedIndex="{Binding SelectedBottleTypeIndex}" />
+
+                        <Entry Placeholder="Mit ajánlasz fel?"
+                               Text="{Binding OtherDescription}"
+                               IsVisible="{Binding IsOtherSelected}" />
+
+                        <Entry Placeholder="Cím *" Text="{Binding Address}" />
+
+                        <Label Text="A címből a koordinátákat automatikusan meghatározzuk."
+                               Style="{StaticResource SecondaryLabel}" />
+
+                        <Entry Placeholder="Megjegyzés" Text="{Binding Notes}" />
+
+                        <Button Text="Közzététel"
+                                Command="{Binding SubmitCommand}"
+                                IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- A saját felajánlások -->
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Offers}">
+                    <BindableLayout.EmptyView>
+                        <Label Text="Nincs ilyen állapotú felajánlásod."
+                               Margin="16"
+                               HorizontalOptions="Center"
+                               Style="{StaticResource SecondaryLabel}" />
+                    </BindableLayout.EmptyView>
+
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="dtos:OfferDto">
+                            <VerticalStackLayout>
+                                <controls:OfferCardView Offer="{Binding .}"
+                                                        ShowStatus="True"
+                                                        TapCommand="{Binding BindingContext.ToggleRequestsCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}}" />
+
+                                <HorizontalStackLayout Margin="16,0,16,12" Spacing="8">
+                                    <Button Text="Jelentkezők"
+                                            Command="{Binding BindingContext.ToggleRequestsCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}}"
+                                            CommandParameter="{Binding .}"
+                                            Padding="12,6"
+                                            FontSize="{StaticResource FontSizeCaption}" />
+                                    <Button Text="Visszavonás"
+                                            Command="{Binding BindingContext.DeleteCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}}"
+                                            CommandParameter="{Binding .}"
+                                            BackgroundColor="{AppThemeBinding Light={StaticResource ErrorLight}, Dark={StaticResource ErrorDark}}"
+                                            Padding="12,6"
+                                            FontSize="{StaticResource FontSizeCaption}" />
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+
+                <!-- A kibontott felajánlásra érkezett jelentkezések -->
+                <Border Style="{StaticResource CardBorder}"
+                        IsVisible="{Binding ExpandedOffer, Converter={StaticResource NotNull}}"
+                        Margin="16,0,16,16">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Jelentkezők" FontAttributes="Bold" />
+
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding PendingRequests}">
+                            <BindableLayout.EmptyView>
+                                <Label Text="Erre a felajánlásra még nem jelentkezett senki."
+                                       Style="{StaticResource SecondaryLabel}" />
+                            </BindableLayout.EmptyView>
+
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="dtos:CollectionRequestDto">
+                                    <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,4">
+                                        <VerticalStackLayout>
+                                            <Label Text="{Binding CollectorName}" />
+                                            <Label Text="{Binding Message}" Style="{StaticResource SecondaryLabel}" />
+                                        </VerticalStackLayout>
+
+                                        <Button Grid.Column="1"
+                                                Text="Elfogad"
+                                                Command="{Binding BindingContext.AcceptCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}}"
+                                                CommandParameter="{Binding .}"
+                                                Padding="10,4"
+                                                Margin="4,0"
+                                                FontSize="{StaticResource FontSizeCaption}" />
+
+                                        <Button Grid.Column="2"
+                                                Text="Elutasít"
+                                                Command="{Binding BindingContext.RejectCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}}"
+                                                CommandParameter="{Binding .}"
+                                                BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceMutedLight}, Dark={StaticResource SurfaceMutedDark}}"
+                                                TextColor="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}"
+                                                Padding="10,4"
+                                                FontSize="{StaticResource FontSizeCaption}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Margin="16" />
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+    </Grid>
+
+</ContentPage>

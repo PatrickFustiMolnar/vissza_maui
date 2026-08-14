@@ -50,9 +50,7 @@
 
             <Picker ItemsSource="{Binding RoleOptions}"
                     SelectedIndex="{Binding SelectedRoleIndex}"
-                    IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}"
-                    TextColor="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}"
-                    BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}" />
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
 
             <Label Text="{Binding ErrorMessage}"
                    IsVisible="{Binding HasError}"

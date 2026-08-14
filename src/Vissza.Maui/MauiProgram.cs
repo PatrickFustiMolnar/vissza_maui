@@ -55,6 +55,8 @@ public static class MauiProgram
         builder.Services.AddTransient<LoginViewModel>();
         builder.Services.AddTransient<RegisterViewModel>();
         builder.Services.AddTransient<DashboardViewModel>();
+        builder.Services.AddTransient<GiveViewModel>();
+        builder.Services.AddSingleton<GeocodingService>();
 
 #if DEBUG
         builder.Logging.AddDebug();

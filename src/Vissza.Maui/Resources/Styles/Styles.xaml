@@ -97,6 +97,16 @@
         </Setter>
     </Style>
 
+    <Style TargetType="Picker">
+        <Setter Property="TextColor"
+                Value="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}" />
+        <Setter Property="TitleColor"
+                Value="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
+        <Setter Property="BackgroundColor"
+                Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeSubtitle}" />
+    </Style>
+
     <Style TargetType="ActivityIndicator">
         <Setter Property="Color"
                 Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
