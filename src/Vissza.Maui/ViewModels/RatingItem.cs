@@ -1,3 +1,4 @@
+using Vissza.Maui.Services;
 using Vissza.Shared.Dtos;
 
 namespace Vissza.Maui.ViewModels;
@@ -17,7 +18,7 @@ public sealed record RatingItem(RatingDto Rating)
     public string? Comment => Rating.Comment;
     public bool HasComment => !string.IsNullOrWhiteSpace(Rating.Comment);
 
-    public string CreatedAtText => Rating.CreatedAt.ToString("yyyy. MM. dd.");
+    public string CreatedAtText => Times.ToLocal(Rating.CreatedAt).ToString("yyyy. MM. dd.");
 
     public bool Star1 => Rating.Stars >= 1;
     public bool Star2 => Rating.Stars >= 2;

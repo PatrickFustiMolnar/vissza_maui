@@ -89,7 +89,8 @@ public sealed partial class OfferDetailViewModel(
         }
     }
 
-    static string Format(DateTime value) => value.ToString("yyyy. MM. dd. HH:mm", CultureInfo.CurrentCulture);
+    static string Format(DateTime value) =>
+        Times.ToLocal(value).ToString("yyyy. MM. dd. HH:mm", CultureInfo.CurrentCulture);
 
     public bool HasNotes => !string.IsNullOrWhiteSpace(Offer?.Notes);
     public string? Notes => Offer?.Notes;

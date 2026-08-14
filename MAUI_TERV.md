@@ -682,8 +682,6 @@ TransactionDetail, Rating, Settings, OfferDetail.
 
 Ami a fázison belül még hátravan:
 
-- **Elérhetőségi idősáv a Give-ben.** A részletlap megjeleníti, létrehozni
-  még nem lehet.
 - **Chat: SignalR a lekérdezés helyett** (6.1).
 
 Az API hosztolása továbbra is nyitott, de csak a 4. fázist blokkolja - lásd 9.
@@ -694,6 +692,58 @@ A régi `Desktop/vissza` projekt innentől **csak olvasásra** szolgál referenc
 ---
 
 ## 11. Módosítási napló
+
+### 2026-08-14 — elérhetőségi idősáv, és egy időzóna-hiba, ami eddig rejtve volt
+
+A Give űrlapja megkapta az idősávot, és ezzel elő is jött egy hiba, amit
+addig nem lehetett észrevenni, amíg csak *olvastuk* a dátumokat.
+
+**A hiba: mindenhol két órával korábbi időt mutattunk.**
+
+Az adatbázis-kiszolgáló **UTC-ben jár** (`NOW()` = `UTC_TIMESTAMP()`), tehát a
+`created_at` és a `available_from` is UTC. A JSON viszont **jelöletlenül**
+adja vissza (`"2026-08-14T04:16:57"`, nincs `Z`), így a .NET
+`DateTimeKind.Unspecified`-ként kapja - a kliens pedig nyersen írta ki. Nyáron
+két, télen egy órával korábbi időpontokat láttunk a beszélgetésekben, az
+értékelések dátumában és a felajánlás elérhetőségénél.
+
+A szerződés innentől kimondva: **a dróton és az adatbázisban UTC van, a
+felületen helyi idő.** Egy helyen, a `Times` osztályban:
+
+```csharp
+public static DateTime ToLocal(DateTime value) =>
+    DateTime.SpecifyKind(value, DateTimeKind.Utc).ToLocalTime();
+
+public static DateTime ToServer(DateTime local) =>
+    DateTime.SpecifyKind(local, DateTimeKind.Local).ToUniversalTime();
+```
+
+Három megjelenítési hely állt át rá: a beszélgetés órái, az értékelések
+dátuma és az elérhetőségi idősáv.
+
+**Az űrlap.** Mindkét mező elhagyható, a `DatePicker`-nek viszont mindig van
+értéke - ezért kapcsoló dönti el, hogy küldjük-e egyáltalán. Alapértelmezés
+"matól 9:00-tól egy hét múlva 18:00-ig": kerek, kiszámítható időpontok, amiket
+igazítani kell, nem kitalálni.
+
+A fordított idősávot a kliens utasítja vissza: a szerver ezt nem ellenőrzi (a
+régi backend sem tette), egy "eddig korábban, mint ettől" felajánlás viszont a
+gyűjtőnek értelmezhetetlen.
+
+A `DatePicker` és a `TimePicker` implicit stílust kapott, mint korábban a
+`Picker`: e nélkül a natív vezérlő a saját alapszínével jön, ami sötét módban
+olvashatatlan.
+
+Végigmérve, élő adaton (utána visszaállítva):
+
+| Lépés | Eredmény |
+|---|---|
+| Kapcsoló be | megjelentek a választók a 9:00 / 18:00 alapértékkel |
+| "Eddig" a kezdés elé állítva | *"Az elérhetőség vége nem lehet a kezdete előtt."*, kérés el sem indult |
+| 18:00 helyi idő közzétéve | `available_from = 16:00` az adatbázisban (CEST → UTC) |
+| ugyanaz a `created_at`-tel | azonos óra, tehát egy órarendszerben vagyunk |
+| Részletlap | újra **18:00** |
+| Januári üzenetek a chatben | +1 óra (CET), nem +2 - a nyári időszámítást dátumonként kezeli |
 
 ### 2026-08-14 — fénykép a felajánláshoz
 

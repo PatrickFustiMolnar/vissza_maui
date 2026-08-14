@@ -85,6 +85,45 @@
                                 BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceMutedLight}, Dark={StaticResource SurfaceMutedDark}}"
                                 TextColor="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}" />
 
+                        <!--
+                            Elérhetőségi idősáv. Mindkét mező elhagyható, a
+                            DatePickernek viszont mindig van értéke - ezért
+                            dönti el a kapcsoló, hogy küldjük-e egyáltalán.
+                        -->
+                        <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+                            <VerticalStackLayout VerticalOptions="Center">
+                                <Label Text="Elérhetőségi idősáv" />
+                                <Label Text="Mikortól meddig vehető át"
+                                       Style="{StaticResource SecondaryLabel}" />
+                            </VerticalStackLayout>
+                            <Switch Grid.Column="1"
+                                    IsToggled="{Binding HasAvailability}"
+                                    VerticalOptions="Center"
+                                    OnColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
+                        </Grid>
+
+                        <VerticalStackLayout IsVisible="{Binding HasAvailability}" Spacing="8">
+                            <Label Text="Ettől" Style="{StaticResource SecondaryLabel}" />
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <DatePicker Date="{Binding AvailableFromDate}"
+                                            MinimumDate="{Binding MinimumDate}"
+                                            Format="yyyy. MM. dd." />
+                                <TimePicker Grid.Column="1"
+                                            Time="{Binding AvailableFromTime}"
+                                            Format="HH:mm" />
+                            </Grid>
+
+                            <Label Text="Eddig" Style="{StaticResource SecondaryLabel}" />
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <DatePicker Date="{Binding AvailableUntilDate}"
+                                            MinimumDate="{Binding MinimumDate}"
+                                            Format="yyyy. MM. dd." />
+                                <TimePicker Grid.Column="1"
+                                            Time="{Binding AvailableUntilTime}"
+                                            Format="HH:mm" />
+                            </Grid>
+                        </VerticalStackLayout>
+
                         <Button Text="Közzététel"
                                 Command="{Binding SubmitCommand}"
                                 IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />

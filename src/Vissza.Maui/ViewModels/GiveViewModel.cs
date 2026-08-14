@@ -92,6 +92,50 @@ public sealed partial class GiveViewModel(
         OnPropertyChanged(nameof(PhotoPreview));
     }
 
+    // --- elérhetőségi idősáv ---
+
+    /// <summary>
+    /// Mindkét mező elhagyható, a DatePickernek viszont mindig van értéke.
+    /// Ez a kapcsoló dönti el, küldjük-e egyáltalán - e nélkül minden
+    /// felajánlás kapna egy idősávot, amit a felhasználó nem kért.
+    /// </summary>
+    [ObservableProperty]
+    public partial bool HasAvailability { get; set; }
+
+    // Alapértelmezés: matól 9-tol egy het mulva 18-ig. Kerek, kiszámítható
+    // időpontok - a felhasználónak igazítania kell rajtuk, nem kitalálnia.
+    static readonly TimeSpan DefaultFromTime = new(9, 0, 0);
+    static readonly TimeSpan DefaultUntilTime = new(18, 0, 0);
+
+    [ObservableProperty]
+    public partial DateTime AvailableFromDate { get; set; } = DateTime.Today;
+
+    [ObservableProperty]
+    public partial TimeSpan AvailableFromTime { get; set; } = DefaultFromTime;
+
+    [ObservableProperty]
+    public partial DateTime AvailableUntilDate { get; set; } = DateTime.Today.AddDays(7);
+
+    [ObservableProperty]
+    public partial TimeSpan AvailableUntilTime { get; set; } = DefaultUntilTime;
+
+    /// <summary>Múltbeli kezdést nincs értelme felkínálni.</summary>
+    public DateTime MinimumDate { get; } = DateTime.Today;
+
+    DateTime AvailableFrom => AvailableFromDate.Date + AvailableFromTime;
+    DateTime AvailableUntil => AvailableUntilDate.Date + AvailableUntilTime;
+
+    void ResetAvailability()
+    {
+        HasAvailability = false;
+
+        AvailableFromDate = DateTime.Today;
+        AvailableFromTime = DefaultFromTime;
+
+        AvailableUntilDate = DateTime.Today.AddDays(7);
+        AvailableUntilTime = DefaultUntilTime;
+    }
+
     [ObservableProperty]
     public partial OfferDto? ExpandedOffer { get; set; }
 
@@ -165,6 +209,14 @@ public sealed partial class GiveViewModel(
             return;
         }
 
+        // A szerver nem ellenőrzi a sorrendet (a régi backend sem tette), a
+        // fordított idősáv viszont a gyűjtőnek értelmezhetetlen.
+        if (HasAvailability && AvailableUntil <= AvailableFrom)
+        {
+            ErrorMessage = "Az elérhetőség vége nem lehet a kezdete előtt.";
+            return;
+        }
+
         // A cím koordinátáit a Nominatim adja. Ha nem sikerül, a felajánlás
         // nem jöhet létre: koordináta nélkül nem jelenne meg a térképen,
         // tehát senki nem találná meg.
@@ -189,6 +241,11 @@ public sealed partial class GiveViewModel(
             LocationLng = (decimal)position.Lng,
             Notes = string.IsNullOrWhiteSpace(Notes) ? null : Notes.Trim(),
             PhotoUrl = PhotoPath,
+
+            // A felhasználó helyi időt választ, a szerver UTC-ben tárol.
+            AvailableFrom = HasAvailability ? Times.ToServer(AvailableFrom) : null,
+            AvailableUntil = HasAvailability ? Times.ToServer(AvailableUntil) : null,
+
             Status = OfferStatus.Active
         };
 
@@ -210,6 +267,7 @@ public sealed partial class GiveViewModel(
         Address = string.Empty;
         Notes = string.Empty;
         PhotoPath = null;
+        ResetAvailability();
     }
 
     [RelayCommand]

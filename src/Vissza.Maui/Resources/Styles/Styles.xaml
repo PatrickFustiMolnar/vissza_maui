@@ -107,6 +107,27 @@
         <Setter Property="FontSize" Value="{StaticResource FontSizeSubtitle}" />
     </Style>
 
+    <!--
+        A dátum- és időválasztó ugyanúgy viselkedik, mint a Picker: implicit
+        stílus nélkül a natív vezérlő a saját alapszínével jön, ami sötét
+        módban olvashatatlan.
+    -->
+    <Style TargetType="DatePicker">
+        <Setter Property="TextColor"
+                Value="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}" />
+        <Setter Property="BackgroundColor"
+                Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeSubtitle}" />
+    </Style>
+
+    <Style TargetType="TimePicker">
+        <Setter Property="TextColor"
+                Value="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}" />
+        <Setter Property="BackgroundColor"
+                Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeSubtitle}" />
+    </Style>
+
     <Style TargetType="ActivityIndicator">
         <Setter Property="Color"
                 Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />

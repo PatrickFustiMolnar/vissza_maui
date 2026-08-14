@@ -1,3 +1,4 @@
+using Vissza.Maui.Services;
 using Vissza.Shared.Dtos;
 
 namespace Vissza.Maui.ViewModels;
@@ -10,7 +11,8 @@ namespace Vissza.Maui.ViewModels;
 public sealed record ChatMessageItem(ChatMessageDto Message, bool IsMine)
 {
     public string Content => Message.Content;
-    public DateTime CreatedAt => Message.CreatedAt;
+    /// <summary>Helyi idő: az üzenet órája csak így mond igazat.</summary>
+    public DateTime CreatedAt => Times.ToLocal(Message.CreatedAt);
     public int Id => Message.Id;
     public int ReceiverId => Message.ReceiverId;
     public bool IsRead => Message.IsRead;
