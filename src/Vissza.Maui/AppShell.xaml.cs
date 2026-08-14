@@ -13,6 +13,7 @@ public partial class AppShell : Shell
         // A chat nem lap, hanem a lapokról nyíló részletképernyő, ezért
         // külön regisztrált útvonal.
         Routing.RegisterRoute("chat", typeof(Pages.ChatPage));
+        Routing.RegisterRoute("transaction", typeof(Pages.TransactionDetailPage));
     }
 
     /// <summary>

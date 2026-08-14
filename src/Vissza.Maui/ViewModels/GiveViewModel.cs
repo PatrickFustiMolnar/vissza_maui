@@ -171,12 +171,22 @@ public sealed partial class GiveViewModel(
             Offers.Remove(offer);
     }
 
-    /// <summary>Egy felajánlás kibontása: megmutatja a rá érkezett jelentkezéseket.</summary>
+    /// <summary>
+    /// Egy felajánlás megnyitása. Aktív állapotban a jelentkezőket mutatja;
+    /// ha viszont már le van foglalva vagy lezárt, akkor nincs kit
+    /// elbírálni - ott az átvétel a következő lépés.
+    /// </summary>
     [RelayCommand]
     async Task ToggleRequestsAsync(OfferDto? offer)
     {
         if (offer is null)
             return;
+
+        if (offer.Status is not OfferStatus.Active)
+        {
+            await OpenTransactionAsync(offer);
+            return;
+        }
 
         if (ExpandedOffer?.Id == offer.Id)
         {
@@ -196,6 +206,32 @@ public sealed partial class GiveViewModel(
             foreach (var request in requests)
                 PendingRequests.Add(request);
         });
+    }
+
+    /// <summary>
+    /// A felajánláshoz tartozó átvétel megnyitása. Egy felajánlásnak
+    /// legfeljebb egy nyitott átvétele van, ezért az elsőt vesszük.
+    /// </summary>
+    async Task OpenTransactionAsync(OfferDto offer)
+    {
+        TransactionDto? transaction = null;
+
+        var found = await RunAsync(async () =>
+        {
+            var transactions = await Api.GetTransactionsAsync(offerId: offer.Id);
+            transaction = transactions.FirstOrDefault();
+        });
+
+        if (!found)
+            return;
+
+        if (transaction is null)
+        {
+            ErrorMessage = "Ehhez a felajánláshoz nem tartozik átvétel.";
+            return;
+        }
+
+        await Shell.Current.GoToAsync($"transaction?transactionId={transaction.Id}");
     }
 
     /// <summary>
